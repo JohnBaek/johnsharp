@@ -180,5 +180,14 @@ public class RequestQuery
             Field = fieldName ,
         });
     }
-    
+
+    /// <summary>
+    /// Indicates whether the query request contains no sorting instructions.
+    /// </summary>
+    public bool HasNoSortRequest => SortOrders.Count == 0;
+
+    /// <summary>
+    /// Indicates whether the query request contains no search instructions.
+    /// </summary>
+    public bool HasNoSearchRequest => SearchMetas.Count == 0;
 }
