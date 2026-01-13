@@ -12,20 +12,16 @@ namespace JohnIsDev.Core.Mail;
 public class ScribanTemplateRenderer(ILogger<ScribanTemplateRenderer> logger) : IMailTemplateRender
 {
     /// <summary>
-    ///
+    /// Renders a template using the specified model and returns the rendered output as a string.
     /// </summary>
-    /// <param name="templateName"></param>
-    /// <param name="model"></param>
-    /// <typeparam name="T"></typeparam>
-    /// <returns></returns>
-    public async Task<ResponseData<string>> RenderAsync<T>(string templateName, T model)
+    /// <typeparam name="T">The type of the model used for rendering the template.</typeparam>
+    /// <param name="templateContent">The template content to be rendered.</param>
+    /// <param name="model">The model object containing data to populate the template.</param>
+    /// <returns>A <see cref="ResponseData{string}"/> object, containing the rendered template output or an error in case of failure.</returns>
+    public async Task<ResponseData<string>> RenderAsync<T>(string templateContent, T model)
     {
         try
         {
-            // Get template content
-            string templatePath = Path.Combine(AppContext.BaseDirectory, "Templates", $"{templateName}.scriban");
-            string templateContent = await File.ReadAllTextAsync(templatePath);
-
             // Parse template content
             Template? template = Template.Parse(templateContent);
 
@@ -33,7 +29,8 @@ public class ScribanTemplateRenderer(ILogger<ScribanTemplateRenderer> logger) : 
             if(template == null)
                 return new ResponseData<string>(EnumResponseResult.Error, "", "");
 
-            return new ResponseData<string>(EnumResponseResult.Success, "", await template.RenderAsync(model));
+            string? parsed = await template.RenderAsync(model);
+            return new ResponseData<string>(EnumResponseResult.Success, "","",parsed);
         }
         catch (Exception e)
         {
