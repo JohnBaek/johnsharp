@@ -6,22 +6,34 @@ using System.Text.RegularExpressions;
 namespace JohnIsDev.Core.Features.Extensions;
 
 /// <summary>
-/// 문자열 확장
+/// An Extension class for the String
 /// </summary>
-public static class StringExtensions
+public static partial class StringExtensions
 {
     /// <summary>
-    /// SHA 로 해싱한다.
+    /// A regex used to match any non-numeric characters in a string.
+    /// </summary>
+    /// <returns>A compiled regular expression for identifying non-numeric characters.</returns>
+    [GeneratedRegex(@"[^\d]")]
+    private static partial Regex NonNumericRegex();
+
+    /// <summary>
+    /// A regex used to match any email address in a string.
+    /// </summary>
+    /// <returns></returns>
+    [GeneratedRegex(@"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$")]
+    private static partial Regex EmailRegex();
+
+    /// <summary>
+    /// Hashing with SHA
     /// </summary>
     /// <param name="input">대상 문자열</param>
     /// <returns>해싱 결과</returns>
     public static string WithDateTime(this string input)
-    {
-        return $"[{DateTime.Now:yyyy-MM-dd hh:mm:ss}] {input}";
-    }
-    
+        =>  $"[{DateTime.Now:yyyy-MM-dd hh:mm:ss}] {input}";
+
     /// <summary>
-    /// Guid 로 파싱한다.
+    /// Parsing to Guid
     /// </summary>
     /// <param name="input">대상 문자열</param>
     /// <returns>해싱 결과</returns>
@@ -34,27 +46,24 @@ public static class StringExtensions
 
         return "00000000-0000-0000-0000-000000000000".ToGuid();
     }
-    
+
     /// <summary>
-    /// 데이터가 Null 또는 비어있는 경우 True
+    /// Determines whether the specified string is null, empty, or consists only of white-space characters.
     /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
+    /// <param name="input">The string to evaluate.</param>
+    /// <returns>
+    /// <c>true</c> if the specified string is null, empty, or consists only of white-space characters; otherwise, <c>false</c>.
+    /// </returns>
     public static bool IsEmpty(this string input)
-    {
-        return string.IsNullOrWhiteSpace(input);
-    }
-    
+        => string.IsNullOrWhiteSpace(input);
+
     /// <summary>
-    /// 데이터가 Null 또는 비어있는 경우 True
+    /// Checks if the current object is not empty
     /// </summary>
     /// <param name="input"></param>
     /// <returns></returns>
     public static bool IsNotEmpty(this string input)
-    {
-        return !string.IsNullOrWhiteSpace(input);
-    }
-
+        => !string.IsNullOrWhiteSpace(input);
 
 
     /// <summary>
@@ -76,7 +85,7 @@ public static class StringExtensions
     /// <param name="pattern">The regex pattern to match against the input string.</param>
     /// <param name="input">The input string to be checked against the regex pattern.</param>
     /// <returns>True if the regex pattern matches the input string; otherwise, false.</returns>
-    public static bool IsMatch(this string pattern, string input)
+    private static bool IsMatch(this string pattern, string input)
     {
         Regex regex = new Regex(pattern: pattern);
         return regex.Match(input).Success;
@@ -87,11 +96,16 @@ public static class StringExtensions
     /// </summary>
     /// <param name="input"></param>
     /// <returns></returns>
-    public static bool IsEmail(this string input)
-    {
-        string pattern = @"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$";
-        return input.IsMatch(pattern);
-    }
+    public static bool IsValidEmail(this string input)
+        => !string.IsNullOrEmpty(input) && EmailRegex().IsMatch(input);
+
+    /// <summary>
+    /// Checks if the current object is an invalid email
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
+    public static bool IsInValidEmail(this string input)
+        => input.IsValidEmail() == false;
     
     /// <summary>
     /// Validate Email value
@@ -106,7 +120,7 @@ public static class StringExtensions
             string host = addr.Host;
 
             // 도메인 존재 확인
-            IPHostEntry entry = Dns.GetHostEntry(host);
+            // IPHostEntry entry = Dns.GetHostEntry(host);
 
             // MX 레코드 검사 (간단 예시)
             var addresses = Dns.GetHostAddresses(host);
@@ -130,7 +144,7 @@ public static class StringExtensions
         {
             return Regex.Replace(input, pattern, "").ToUpper();
         }
-        catch (Exception e)
+        catch
         {
             return "";
         }
@@ -214,7 +228,7 @@ public static class StringExtensions
     /// <param name="input">The input string from which non-numeric characters will be removed.</param>
     /// <returns>A string containing only numeric characters extracted from the input, or an empty string if the input is null or empty.</returns>
     public static string ToExactNumberStringOnly(this string input)
-        => string.IsNullOrEmpty(input) ? "" : Regex.Replace(input, @"[^\d]", "");
+        => string.IsNullOrEmpty(input) ? "" : NonNumericRegex().Replace(input, "");
 
     /// <summary>
     /// Extract IFrame Src
