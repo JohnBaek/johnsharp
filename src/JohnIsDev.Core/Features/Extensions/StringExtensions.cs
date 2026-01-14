@@ -201,6 +201,22 @@ public static class StringExtensions
     }
 
     /// <summary>
+    /// Checks if the phone number is invalid.
+    /// </summary>
+    /// <param name="input">The phone number string to be checked.</param>
+    /// <returns>True if the phone number is invalid; otherwise, false.</returns>
+    public static bool IsInvalidPhoneNumber(this string input)
+        => input.IsValidPhoneNumber() == false;
+
+    /// <summary>
+    /// Removes all non-numeric characters from the input string and returns the resulting string.
+    /// </summary>
+    /// <param name="input">The input string from which non-numeric characters will be removed.</param>
+    /// <returns>A string containing only numeric characters extracted from the input, or an empty string if the input is null or empty.</returns>
+    public static string ToExactNumberStringOnly(this string input)
+        => string.IsNullOrEmpty(input) ? "" : Regex.Replace(input, @"[^\d]", "");
+
+    /// <summary>
     /// Extract IFrame Src
     /// </summary>
     /// <param name="input"></param>
