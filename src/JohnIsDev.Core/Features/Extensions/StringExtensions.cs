@@ -11,6 +11,13 @@ namespace JohnIsDev.Core.Features.Extensions;
 public static partial class StringExtensions
 {
     /// <summary>
+    /// A regex pattern used to match Korean mobile phone numbers starting with "010" followed by 8 numeric digits.
+    /// </summary>
+    /// <returns>A compiled regular expression for validating Korean mobile phone numbers.</returns>
+    [GeneratedRegex(@"^010\d{8}$")]
+    private static partial Regex KoreanMobileRegex();
+
+    /// <summary>
     /// A regex used to match any non-numeric characters in a string.
     /// </summary>
     /// <returns>A compiled regular expression for identifying non-numeric characters.</returns>
@@ -21,7 +28,7 @@ public static partial class StringExtensions
     /// A regex used to match any email address in a string.
     /// </summary>
     /// <returns></returns>
-    [GeneratedRegex(@"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$")]
+    [GeneratedRegex(@"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")]
     private static partial Regex EmailRegex();
 
     /// <summary>
@@ -149,6 +156,29 @@ public static partial class StringExtensions
             return "";
         }
     }
+
+    /// <summary>
+    /// Validate Korean Phone Number
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
+    public static bool IsValidKoreanPhoneNumber(this string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+            return false;
+        string onlyDigits = input.ToExactNumberStringOnly();
+        return KoreanMobileRegex().IsMatch(onlyDigits);
+    }
+
+    /// <summary>
+    /// Determines whether the specified string is an invalid Korean mobile phone number.
+    /// </summary>
+    /// <param name="input">The string to evaluate.</param>
+    /// <returns>
+    /// <c>true</c> if the specified string is not a valid Korean mobile phone number; otherwise, <c>false</c>.
+    /// </returns>
+    public static bool IsInValidKoreanPhoneNumber(this string input)
+        => input.IsValidKoreanPhoneNumber() == false;
 
     /// <summary>
     /// 한국 휴대전화 번호 형식으로 변환한다.
