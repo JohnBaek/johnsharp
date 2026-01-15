@@ -175,7 +175,7 @@ public static class ObjectExtensions
                type == typeof(Guid) || 
                type == typeof(decimal) ||
                (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>) && 
-                IsSimpleType(Nullable.GetUnderlyingType(type)));
+                IsSimpleType(Nullable.GetUnderlyingType(type) ?? throw new InvalidOperationException()));
     }
 
     /// <summary>
@@ -253,7 +253,7 @@ public static class ObjectExtensions
     {
         try
         {
-            object destinationValue = Activator.CreateInstance(destinationProperty.PropertyType);
+            object destinationValue = Activator.CreateInstance(destinationProperty.PropertyType) ?? throw new InvalidOperationException();
             CopyProperties(sourceValue, destinationValue);
             destinationProperty.SetValue(destination, destinationValue);
         }
@@ -271,7 +271,8 @@ public static class ObjectExtensions
     /// <returns>복사된 데이터 객체 또는 단순 타입 데이터</returns>
     private static object CopyElement(object sourceElement, Type targetType)
     {
-        if (sourceElement == null) return null;
+        // if (sourceElement == null)
+        //     return null;
 
         if (IsSimpleType(targetType))
         {
@@ -279,7 +280,7 @@ public static class ObjectExtensions
         }
         else
         {
-            object destinationElement = Activator.CreateInstance(targetType);
+            object destinationElement = Activator.CreateInstance(targetType) ?? throw new InvalidOperationException();
             CopyProperties(sourceElement, destinationElement);
             return destinationElement;
         }
