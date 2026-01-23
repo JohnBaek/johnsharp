@@ -12,4 +12,5 @@ public interface IChatClient
     /// <returns>A task representing the asynchronous operation. The task result contains the response from the chat client.</returns>
     Task<string> AskAsync(string question);
     
+    
 }
