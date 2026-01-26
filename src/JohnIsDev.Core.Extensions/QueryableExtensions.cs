@@ -68,4 +68,14 @@ public static class QueryableExtensions
         }
         return result;
     }
+
+    /// <summary>
+    /// Projects each element of a sequence to a new form using a universal mapping function.
+    /// </summary>
+    /// <param name="source">The source sequence to project.</param>
+    /// <typeparam name="TSource">The type of the elements of the source sequence.</typeparam>
+    /// <typeparam name="TDestination">The type of the elements in the resulting sequence.</typeparam>
+    /// <returns>An IQueryable of the projected type.</returns>
+    public static IQueryable<TDestination> SelectUniversal<TSource, TDestination>(this IQueryable<TSource> source)
+        => source.Select(i => i.FromCopyValueUniversal<TDestination>());
 }
