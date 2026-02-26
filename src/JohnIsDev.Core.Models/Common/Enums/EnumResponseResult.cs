@@ -19,5 +19,4 @@ public enum EnumResponseResult
     /// 성공
     /// </summary>
     Success = 0,
-    Data
 }
