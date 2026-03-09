@@ -59,16 +59,10 @@ public class QueryBuilder<TDbContext>(
 {
     try
     {
-        // List<Expression<Func<T, bool>>> whereConditions = CreateSearchConditions<T>(requestQuery);
-        // if (whereConditions.Count > 0)
-        //     queryable = whereConditions.Aggregate(queryable, (current, condition) => current.Where(condition));
-
+        // Add Where Condition 
         Expression<Func<T, bool>>? whereCondition = CreateSearchConditions<T>(requestQuery);
         if (whereCondition != null)
-        {
             queryable = queryable.Where(whereCondition);
-        }
-        
         
         IEnumerable<QuerySortOrder> sortOrders = ConvertToQuerySortList(requestQuery);
         bool isFirstSort = true;
