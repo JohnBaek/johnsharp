@@ -153,7 +153,7 @@ public class RabbitMqMessageBus : IMessageBus
             
             // Consumes temporary queue
             AsyncEventingBasicConsumer replyConsumer = new AsyncEventingBasicConsumer(channel);
-            string correlationId = Guid.NewGuid().ToString();
+            string correlationId = Guid.CreateVersion7().ToString();
 
             // Consume Events
             replyConsumer.ReceivedAsync += (model, eventArgs) =>
@@ -433,7 +433,7 @@ public class RabbitMqMessageBus : IMessageBus
     //     //         autoDelete: true);
     //     //     
     //     //     string replyQueueName = replyQueueResult.QueueName;
-    //     //     string correlationId = Guid.NewGuid().ToString();
+    //     //     string correlationId = Guid.CreateVersion7().ToString();
     //     //     
     //     //     // Thread for wating response 
     //     //     TaskCompletionSource<TResponse> waitingTaks = new TaskCompletionSource<TResponse>();
