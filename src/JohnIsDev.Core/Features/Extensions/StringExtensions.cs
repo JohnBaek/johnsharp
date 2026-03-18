@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Mail;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
+using Ganss.Xss;
 
 namespace JohnIsDev.Core.Features.Extensions;
 
@@ -16,6 +17,11 @@ public static partial class StringExtensions
     /// <returns>A compiled regular expression for validating Korean mobile phone numbers.</returns>
     [GeneratedRegex(@"^010\d{8}$")]
     private static partial Regex KoreanMobileRegex();
+    
+    /// <summary>
+    /// A regex pattern used to match Korean mobile phone numbers starting with "02" followed by 11 numeric digits.
+    /// </summary>
+    private static readonly HtmlSanitizer Sanitizer = new HtmlSanitizer();
 
     /// <summary>
     /// A regex used to match any non-numeric characters in a string.
@@ -281,4 +287,12 @@ public static partial class StringExtensions
 
         return input;
     }
+
+    /// <summary>
+    /// Sanitizes the provided HTML string to remove potentially harmful or unwanted elements and attributes.
+    /// </summary>
+    /// <param name="html">The input HTML string to be sanitized.</param>
+    /// <returns>The sanitized HTML string with harmful or unwanted content removed.</returns>
+    public static string SanitizeHtml(this string html)
+        => string.IsNullOrWhiteSpace(html) ? html : Sanitizer.Sanitize(html);
 }
