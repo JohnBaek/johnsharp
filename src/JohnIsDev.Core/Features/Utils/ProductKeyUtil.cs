@@ -1,16 +1,17 @@
 namespace JohnIsDev.Core.Features.Utils;
 
 /// <summary>
-/// 
+/// Provides utility methods for generating product keys based on a category key and sequence number.
 /// </summary>
 public static class ProductKeyUtil
 {
     /// <summary>
-    /// 
+    /// Generates a product key using a specified category key and product sequence.
     /// </summary>
-    /// <param name="cateogryKey"></param>
-    /// <param name="productSequnce"></param>
-    /// <returns></returns>
+    /// <param name="cateogryKey">The category key, which must be a 3-character string.</param>
+    /// <param name="productSequnce">The sequence number used to generate the product key.</param>
+    /// <returns>A string representing the generated product key in the format: [categoryKey]-[YYMMDD]-[sequenceNumber].</returns>
+    /// <exception cref="ArgumentException">Thrown when the category key is null, empty, or not 3 characters long.</exception>
     public static string GetProductKey(string cateogryKey, int productSequnce)
     {
         if (string.IsNullOrWhiteSpace(cateogryKey) || cateogryKey.Length != 3)
