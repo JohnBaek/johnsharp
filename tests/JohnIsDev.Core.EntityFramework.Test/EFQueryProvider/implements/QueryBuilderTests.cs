@@ -82,10 +82,10 @@ public class QueryExecutorTests : IDisposable, IAsyncDisposable
     public async Task ExecuteWithTransactionAsync_ShouldCommitOnSuccess()
     {
         // Arrange
-        var testUser = _userFaker.Generate();
+        TestUser? testUser = _userFaker.Generate();
 
         // Act
-        var response = await _queryExecutor.ExecuteWithTransactionAutoCommitAsync<Response>(async dbContext =>
+        Response response = await _queryExecutor.ExecuteWithTransactionAutoCommitAsync<Response>(async dbContext =>
         {
             await dbContext.Users.AddAsync(testUser);
             await dbContext.SaveChangesAsync();
@@ -97,7 +97,7 @@ public class QueryExecutorTests : IDisposable, IAsyncDisposable
         response.Result.Should().Be(EnumResponseResult.Success);
 
         // Verify data is committed
-        var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == testUser.Id);
+        TestUser? user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == testUser.Id);
         user.Should().NotBeNull();
     }
 
