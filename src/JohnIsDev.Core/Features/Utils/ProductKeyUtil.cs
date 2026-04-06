@@ -25,7 +25,7 @@ public static class ProductKeyUtil
         // 시퀀스를 12자리로 포맷팅
         string sequenceString = productSequnce.ToString("D12");
         
-        // 최종 제품 키 조합
+        // 최종 솔루션 키 조합
         return $"{cateogryKey}-{datePart}-{sequenceString}";
     }
 }
