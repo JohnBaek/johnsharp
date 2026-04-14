@@ -51,7 +51,7 @@ public class AzureOpenAiClient : IChatClient
         _logger = logger;
         _configuration = configuration;
 
-        // Throws an exception if the API key is not set in the appsettings.json file.
+        // Throws an exception if the API key is not set in the app settings.json file.
         if (string.IsNullOrEmpty(_configuration["AzureOpenAi:ApiKey"]) || string.IsNullOrEmpty(_configuration["AzureOpenAi:Model"]) )
             throw new Exception("AzureOpenAi:ApiKey has not been set in the appsettings.json file.");
 
