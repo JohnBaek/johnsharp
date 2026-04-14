@@ -1,9 +1,12 @@
 using System.Net.Http.Headers;
+using System.Text;
 using JohnIsDev.Core.LLM.Interfaces;
 using JohnIsDev.Core.LLM.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
 using Newtonsoft.Json;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace JohnIsDev.Core.LLM.Implements;
 
@@ -71,11 +74,16 @@ public class AzureOpenAiClient : IChatClient
     {
         try
         {
-            using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, BaseUrl);
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey); 
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
+
+            StringContent content = new StringContent(JsonConvert.SerializeObject(new
+            {
+                model = _model,
+                input = question,
+            }), Encoding.UTF8, "application/json");
             
             // Request to DirectLine API
-            using HttpResponseMessage response = await _httpClient.SendAsync(request);
+            var response = await _httpClient.PostAsync("https://eastus2.api.cognitive.microsoft.com/openai/v1/responses", content);
             string responseContent = await response.Content.ReadAsStringAsync();
             
             if(! response.IsSuccessStatusCode)
@@ -85,7 +93,8 @@ public class AzureOpenAiClient : IChatClient
             }
             
             // Deserialize response content
-            ResponseAzureOpenAi? deserialized = JsonConvert.DeserializeObject<ResponseAzureOpenAi>(responseContent);
+            JsonSerializerOptions options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            ResponseAzureOpenAi? deserialized = JsonSerializer.Deserialize<ResponseAzureOpenAi>(responseContent , options);
             if(deserialized == null)
                 return "";
             

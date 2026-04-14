@@ -11,24 +11,26 @@ public class ResponseAzureOpenAi
     /// Gets or sets the timestamps associated with the creation of the response.
     /// This property maps to the "created_at" field in the JSON response.
     /// </summary>
+    [JsonInclude]
     [JsonPropertyName("created_at")]
-    private string RegDateTimStamps { get; set; } = "";
+    private long RegDateTimStamps { get; set; } 
     
     /// <summary>
     /// Gets the date and time when the response was created.
     /// </summary>
-    public DateTime RegDate => DateTime.Parse(RegDateTimStamps);
+    public DateTime RegDate => DateTimeOffset.FromUnixTimeSeconds(RegDateTimStamps).ToLocalTime().DateTime;
 
     /// <summary>
     /// Gets or sets the timestamps associated with the completion of the response.
     /// </summary>
+    [JsonInclude]
     [JsonPropertyName("completed_at")]
-    private string FinishDateTimStamps { get; set; } = "";
+    private long FinishDateTimStamps { get; set; } 
     
     /// <summary>
     /// Gets the date and time when the response was completed.
     /// </summary>
-    public DateTime FinishDate => DateTime.Parse(FinishDateTimStamps);
+    public DateTime FinishDate => DateTimeOffset.FromUnixTimeSeconds(FinishDateTimStamps).ToLocalTime().DateTime;
 
     /// <summary>
     /// Gets or sets the outputs contained in the response.
