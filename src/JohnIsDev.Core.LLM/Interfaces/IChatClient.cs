@@ -11,6 +11,4 @@ public interface IChatClient
     /// <param name="question">The question to be sent to the chat client.</param>
     /// <returns>A task representing the asynchronous operation. The task result contains the response from the chat client.</returns>
     Task<string> AskAsync(string question);
-    
-    
 }
