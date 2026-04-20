@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using System.Management;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.Extensions.Logging;
 
 namespace JohnIsDev.Core.Features.Utils;
@@ -8,7 +10,7 @@ namespace JohnIsDev.Core.Features.Utils;
 /// <summary>
 /// SystemKeyUtil
 /// </summary>
-public class SystemKeyUtil(ILogger<SystemKeyUtil> logger)
+public class SystemKeyUtil()
 {
     /// <summary>
     /// Retrieves a unique key for the machine based on hardware information,
@@ -26,7 +28,10 @@ public class SystemKeyUtil(ILogger<SystemKeyUtil> logger)
         {
             hardwareInfo = GetMacUniqueKey();
         }
-        return hardwareInfo;
+
+        using SHA256 sha256 = SHA256.Create();
+        byte[] bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(hardwareInfo));
+        return Convert.ToBase64String(bytes);
     }
     
     /// <summary>
@@ -56,7 +61,7 @@ public class SystemKeyUtil(ILogger<SystemKeyUtil> logger)
         }
         catch (Exception e)
         {
-            logger.LogError(e, "Error generating unique key");
+            Console.Error.WriteLine(e);
             throw;
         }
         return result ?? "Unknown";
@@ -96,7 +101,7 @@ public class SystemKeyUtil(ILogger<SystemKeyUtil> logger)
         }
         catch (Exception e)
         {
-            logger.LogError(e, "Error generating unique key");
+            Console.Error.WriteLine(e);
             throw;
         }
     }
