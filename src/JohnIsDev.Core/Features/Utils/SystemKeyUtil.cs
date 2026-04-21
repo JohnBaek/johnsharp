@@ -3,7 +3,6 @@ using System.Management;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.Extensions.Logging;
 
 namespace JohnIsDev.Core.Features.Utils;
 
@@ -64,7 +63,6 @@ public class SystemKeyUtil()
             Console.Error.WriteLine(e);
             throw;
         }
-        return result ?? "Unknown";
     }
     
     /// <summary>
