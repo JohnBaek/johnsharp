@@ -11,7 +11,7 @@ namespace JohnIsDev.Core.EntityFramework.Interfaces;
 /// </summary>
 public interface IQueryExecutor<TDbContext> where TDbContext : DbContext
 {
-    
+     
     /// <summary>
     /// Executes an operation within a transactional scope and optionally commits the transaction automatically.
     /// </summary>
