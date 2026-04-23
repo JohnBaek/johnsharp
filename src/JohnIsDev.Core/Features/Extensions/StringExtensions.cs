@@ -295,4 +295,12 @@ public static partial class StringExtensions
     /// <returns>The sanitized HTML string with harmful or unwanted content removed.</returns>
     public static string SanitizeHtml(this string html)
         => string.IsNullOrWhiteSpace(html) ? html : Sanitizer.Sanitize(html);
+    
+    
+    public static decimal ToDecimal(this string? input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return 0m;
+        var numericPart = new string(input.Where(c => char.IsDigit(c) || c == '.' || c == '-').ToArray());
+        return decimal.TryParse(numericPart, out var result) ? result : 0m;
+    }
 }

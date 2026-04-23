@@ -8,6 +8,38 @@ namespace JohnIsDev.Core.Features.Extensions;
 public static class HttpClientExtension
 {
     /// <summary>
+    /// Sends an HTTP GET request to the specified base URL with query parameters derived from the provided request object
+    /// and returns the deserialized response of type <typeparamref name="TResponse"/>.
+    /// </summary>
+    /// <typeparam name="TResponse">
+    /// The type of the object expected in the response.
+    /// </typeparam>
+    /// <param name="client">
+    /// The <see cref="HttpClient"/> instance used to send the request.
+    /// </param>
+    /// <param name="baseUrl">
+    /// The base URL for the HTTP GET request.
+    /// </param>
+    /// <param name="request">
+    /// An object whose properties are converted into query parameters for the request URL.
+    /// </param>
+    /// <returns>
+    /// A task that represents the asynchronous operation. Upon completion, the task contains
+    /// the deserialized response object of type <typeparamref name="TResponse"/>, or null if deserialization fails.
+    /// </returns>
+    public static async Task<TResponse?> GetAsync<TResponse>(this HttpClient client, string baseUrl, object request)
+    {
+        string queryString = request.ToQueryString();
+        string fullUrl = $"{baseUrl}?{queryString}";
+    
+        HttpResponseMessage response = await client.GetAsync(fullUrl);
+        response.EnsureSuccessStatusCode();
+    
+        string responseBody = await response.Content.ReadAsStringAsync();
+        return JsonConvert.DeserializeObject<TResponse>(responseBody);
+    }
+    
+    /// <summary>
     /// 
     /// </summary>
     /// <param name="client"></param>
