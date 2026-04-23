@@ -46,9 +46,9 @@ public class ChatGptClient : IChatClient
         _logger = logger;
         _configuration = configuration;
 
-        // Throws an exception if the API key is not set in the appsettings.json file.
+        // Throws an exception if the API key is not set in the appsettings.Development.json file.
         if (string.IsNullOrEmpty(configuration["ChatGpt:ApiKey"]) || string.IsNullOrEmpty(configuration["ChatGpt:Model"]) )
-            throw new Exception("ChatGpt:ApiKey has not been set in the appsettings.json file.");
+            throw new Exception("ChatGpt:ApiKey has not been set in the appsettings.Development.json file.");
 
         // Initialize ChatGptClient
         _apiKey = configuration["ChatGpt:ApiKey"] ?? "";
