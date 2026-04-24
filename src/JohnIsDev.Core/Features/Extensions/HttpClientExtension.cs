@@ -47,20 +47,29 @@ public static class HttpClientExtension
     /// <returns></returns>
     public static async Task<TResponse?> PostAsync<TResponse>(this HttpClient client, string url , object request)
     {
-        // Prepares a Request Object
-        string requestJson = JsonConvert.SerializeObject(request);
-        Console.WriteLine($"requestJson: {requestJson}");
-        StringContent content = new StringContent(requestJson, System.Text.Encoding.UTF8, "application/json");
+        try
+        {
+            // Prepares a Request Object
+            string requestJson = JsonConvert.SerializeObject(request);
+            Console.WriteLine($"ProcessURL: {url}");
+            StringContent content = new StringContent(requestJson, System.Text.Encoding.UTF8, "application/json");
         
-        // Invokes a Post request to endpoint
-        HttpResponseMessage response = await client.PostAsync(url, content);
+            // Invokes a Post request to endpoint
+            HttpResponseMessage response = await client.PostAsync(url, content);
             
-        // Checks on response status
-        response.EnsureSuccessStatusCode();
+            // Checks on response status
+            response.EnsureSuccessStatusCode();
             
-        // Reads a response body 
-        string responseBody = await response.Content.ReadAsStringAsync();
-        return JsonConvert.DeserializeObject<TResponse>(responseBody);
+            // Reads a response body 
+            string responseBody = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<TResponse>(responseBody);
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"{url} Error");
+            Console.Error.WriteLine(e);
+            throw;
+        }
     }
 
 
