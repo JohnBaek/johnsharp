@@ -27,10 +27,11 @@ public static class HttpClientExtension
     /// A task that represents the asynchronous operation. Upon completion, the task contains
     /// the deserialized response object of type <typeparamref name="TResponse"/>, or null if deserialization fails.
     /// </returns>
-    public static async Task<TResponse?> GetAsync<TResponse>(this HttpClient client, string baseUrl, object request)
+    public static async Task<TResponse?> GetAsync<TResponse>(this HttpClient client, string baseUrl, object? request)
     {
-        string queryString = request.ToQueryString();
-        string fullUrl = $"{baseUrl}?{queryString}";
+        string fullUrl = baseUrl;
+        if (request != null)
+            fullUrl = $"{baseUrl}?{request.ToQueryString()}";
     
         HttpResponseMessage response = await client.GetAsync(fullUrl);
         response.EnsureSuccessStatusCode();
