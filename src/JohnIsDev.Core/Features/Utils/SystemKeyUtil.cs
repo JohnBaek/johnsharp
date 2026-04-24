@@ -33,7 +33,7 @@ public class SystemKeyUtil()
 
         using SHA256 sha256 = SHA256.Create();
         byte[] bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(hardwareInfo));
-        return Convert.ToBase64String(bytes);
+        return Convert.ToHexString(bytes).ToLower();
     }
     
     public string GetSimpleHardwareFingerprint()
