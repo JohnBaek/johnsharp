@@ -3,6 +3,7 @@ using System.Management;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Win32;
 
 namespace JohnIsDev.Core.Features.Utils;
 
@@ -21,7 +22,7 @@ public class SystemKeyUtil()
         string hardwareInfo = string.Empty;
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            hardwareInfo = GetWmiValue("Win32_BIOS", "SerialNumber") + GetWmiValue("Win32_BaseBoard", "SerialNumber");
+            hardwareInfo = GetSimpleHardwareFingerprint();
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
@@ -31,6 +32,12 @@ public class SystemKeyUtil()
         using SHA256 sha256 = SHA256.Create();
         byte[] bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(hardwareInfo));
         return Convert.ToBase64String(bytes);
+    }
+    
+    public string GetSimpleHardwareFingerprint()
+    {
+        string id = Environment.MachineName + Environment.UserName + RuntimeInformation.OSDescription;
+        return id;
     }
     
     /// <summary>
