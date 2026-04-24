@@ -26,7 +26,9 @@ public class SystemKeyUtil()
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
-            hardwareInfo = GetMacUniqueKey();
+            hardwareInfo = GetMacUniqueKey().Replace("-", "").ToLower();
+            
+            
         }
 
         using SHA256 sha256 = SHA256.Create();
