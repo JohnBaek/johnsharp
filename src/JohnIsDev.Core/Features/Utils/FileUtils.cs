@@ -17,24 +17,24 @@ public class FileUtils(ILogger<FileUtils> logger)
     /// Array of size suffixes used to represent data sizes in human-readable formats.
     /// Ranges from "bytes" to "YB" (yottabytes).
     /// </summary>
-    private static readonly string[] SizeSuffixes = { "bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
+    private static readonly string[] SizeSuffixes = ["bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
     
     /// <summary>
     /// Known Magic numbers for files
     /// </summary>
     private static readonly Dictionary<string, List<byte[]>> KnownSignatures = new()
     {
-        { "pdf", [new byte[] { 0x25, 0x50, 0x44, 0x46 }] },
-        { "png", [new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A }] },
+        { "pdf", [[0x25, 0x50, 0x44, 0x46]] },
+        { "png", [[0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]] },
         { "jpg", [
-            new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 },
-            new byte[] { 0xFF, 0xD8, 0xFF, 0xE1 },
-            new byte[] { 0xFF, 0xD8, 0xFF, 0xDB },
-            new byte[] { 0xFF, 0xD8, 0xFF, 0xEE } // 추가 JPEG 시그니처
+            [0xFF, 0xD8, 0xFF, 0xE0],
+            [0xFF, 0xD8, 0xFF, 0xE1],
+            [0xFF, 0xD8, 0xFF, 0xDB],
+            [0xFF, 0xD8, 0xFF, 0xEE] // 추가 JPEG 시그니처
         ]},
-        { "xlsx", [new byte[] { 0x50, 0x4B, 0x03, 0x04 }] }, // ZIP 시그니처이므로 추가 검증 필요
-        { "docx", [new byte[] { 0x50, 0x4B, 0x03, 0x04 }] }, // DOCX 추가
-        { "zip", [new byte[] { 0x50, 0x4B, 0x03, 0x04 }] }
+        { "xlsx", [[0x50, 0x4B, 0x03, 0x04]] }, // ZIP 시그니처이므로 추가 검증 필요
+        { "docx", [[0x50, 0x4B, 0x03, 0x04]] }, // DOCX 추가
+        { "zip", [[0x50, 0x4B, 0x03, 0x04]] }
     };
 
     /// <summary>
