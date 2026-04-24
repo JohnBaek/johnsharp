@@ -30,8 +30,6 @@ public static class HttpClientExtension
     public static async Task<TResponse?> GetAsync<TResponse>(this HttpClient client, string baseUrl, object? request)
     {
         string fullUrl = baseUrl;
-        if (request != null)
-            fullUrl = $"{baseUrl}?{request.ToQueryString()}";
     
         HttpResponseMessage response = await client.GetAsync(fullUrl);
         response.EnsureSuccessStatusCode();
