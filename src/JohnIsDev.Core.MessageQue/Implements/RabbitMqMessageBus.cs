@@ -136,6 +136,8 @@ public class RabbitMqMessageBus : IMessageBus
         TaskCompletionSource<TResponse?> taskCompletion = new TaskCompletionSource<TResponse?>();
         try
         {
+            _logger.LogInformation($"Publish RPC to exchangeName: {exchangeName} RoutingKey: {routingKey}");
+            
             await using IChannel channel = await _connection.CreateChannelAsync();
             await channel.ExchangeDeclareAsync(exchangeName, exchangeType, durable: true, autoDelete: false);
         
