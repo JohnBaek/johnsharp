@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Tokens;
 
 namespace JohnIsDev.Core.Features.Extensions;
@@ -46,6 +47,18 @@ public static class JwtAuthenticationExtension
                 };
                 options.Events = new JwtBearerEvents
                 {
+                    // For WebSocket
+                    OnMessageReceived = context =>
+                    {
+                        StringValues accessToken = context.Request.Query["access_token"];
+                        PathString path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) && (path.StartsWithSegments("/hub/v1")))
+                        {
+                            context.Token = accessToken;
+                        }
+                        return Task.CompletedTask;
+                    },
+                    
                     // Does not have Authentication 
                     OnChallenge = async context =>
                     {
