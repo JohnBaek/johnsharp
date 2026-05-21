@@ -72,6 +72,29 @@ public static class HttpClientExtension
         }
     }
 
+    /// <summary>
+    /// Sends an HTTP POST request to the specified URL with the given request object as the request body
+    /// and returns the deserialized response of type <typeparamref name="TResponse"/>.
+    /// </summary>
+    /// <typeparam name="TResponse">
+    /// The type of the object expected in the response.
+    /// </typeparam>
+    /// <param name="client">
+    /// The <see cref="HttpClient"/> instance used to send the request.
+    /// </param>
+    /// <param name="url">
+    /// The target URL for the HTTP POST request.
+    /// </param>
+    /// <param name="request">
+    /// The object to be serialized and sent as the request body. Pass null if no body is required.
+    /// </param>
+    /// <returns>
+    /// A task that represents the asynchronous operation. Upon completion, the task contains
+    /// the deserialized response object of type <typeparamref name="TResponse"/>, or null if deserialization fails.
+    /// </returns>
+    public static async Task<TResponse?> PostAsync<TResponse>(this HttpClient client, string url)
+        => await client.PostAsync<TResponse>(url, null);
+
 
     /// <summary>
     /// Sends an HTTP PUT request with the specified request object to the provided URL
