@@ -16,6 +16,10 @@ public class ResponseList<T> : Response
     {
     }
 
+    public ResponseList(EnumResponseResult result, List<T>? items) : this(result, "", "", items)
+    {
+    }
+
 
     /// <summary>
     /// 생성자
