@@ -296,7 +296,19 @@ public static partial class StringExtensions
     public static string SanitizeHtml(this string html)
         => string.IsNullOrWhiteSpace(html) ? html : Sanitizer.Sanitize(html);
     
+    /// <summary>
+    /// String to Digit Only
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
+    public static string ToDigitOnly(this string input)
+        => Regex.Replace(input, "[^0-9]", "");
     
+    /// <summary>
+    /// String to Decimal
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
     public static decimal ToDecimal(this string? input)
     {
         if (string.IsNullOrWhiteSpace(input)) return 0m;
