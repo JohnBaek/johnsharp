@@ -80,12 +80,12 @@ public class RabbitMqMessageBus : IMessageBus
     /// sending messages to RabbitMQ with a defined exchange type and routing key.
     /// </summary>
     /// <typeparam name="T">The type of the message to be published.</typeparam>
-    /// <param name="topic">The topic or exchange name where the message will be published.</param>
+    /// <param name="exchangeName">The topic or exchange name where the message will be published.</param>
     /// <param name="routingKey">The routing key that determines how the message will be routed.</param>
     /// <param name="exchangeType">The type of the RabbitMQ exchange (e.g., direct, fanout, topic).</param>
     /// <param name="message">The message payload to be published.</param>
     /// <returns>A Task that represents the asynchronous operation for message publishing.</returns>
-    public async Task PublishAsync<T>(string topic, string routingKey, string exchangeType, T message)
+    public async Task PublishAsync<T>(string exchangeName, string routingKey, string exchangeType, T message)
     {
         try
         {
@@ -93,16 +93,16 @@ public class RabbitMqMessageBus : IMessageBus
             await using IChannel channel = await _connection.CreateChannelAsync();
 
             // Declare an exchange 
-            await channel.ExchangeDeclareAsync(topic, exchangeType, durable: true, autoDelete: false);
+            await channel.ExchangeDeclareAsync(exchangeName, exchangeType, durable: true, autoDelete: false);
 
             // Serialize
             byte[] body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message));
             
-            _logger.LogInformation($"Publish to {topic} with routingKey {routingKey} with body {body}");
+            _logger.LogInformation($"Publish to {exchangeName} with routingKey {routingKey} with body {body}");
 
             // Publish to MQ
             await channel.BasicPublishAsync(
-                exchange: topic,
+                exchange: exchangeName,
                 routingKey: routingKey,
                 body: body
             );
@@ -206,7 +206,6 @@ public class RabbitMqMessageBus : IMessageBus
             throw;
         }
     }
-
 
     /// <summary>
     /// Subscribes to an RPC (Remote Procedure Call) queue, enabling bidirectional communication where the server

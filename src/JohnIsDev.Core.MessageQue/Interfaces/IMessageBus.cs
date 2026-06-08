@@ -8,13 +8,13 @@ public interface IMessageBus : IDisposable
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="topic"></param>
+    /// <param name="exchangeName"></param>
     /// <param name="routingKey"></param>
     /// <param name="exchangeType"></param>
     /// <param name="message"></param>
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
-    Task PublishAsync<T>(string topic, string routingKey, string exchangeType, T message);
+    Task PublishAsync<T>(string exchangeName, string routingKey, string exchangeType, T message);
 
     /// <summary>
     /// 
