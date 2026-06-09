@@ -351,11 +351,15 @@ public static class ObjectExtensions
 
         try
         {
-            string json = JsonConvert.SerializeObject(source, new JsonSerializerSettings
+            var settings = new JsonSerializerSettings
             {
-                ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 순환 참조 방지
-            });
-            return JsonConvert.DeserializeObject<T>(json)!;
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                TypeNameHandling = TypeNameHandling.Auto,
+                NullValueHandling = NullValueHandling.Ignore
+            };
+                
+            string json = JsonConvert.SerializeObject(source, settings);
+            return JsonConvert.DeserializeObject<T>(json, settings)!;
         }
         catch
         {
