@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Mail;
 using System.Net.Sockets;
@@ -314,5 +315,28 @@ public static partial class StringExtensions
         if (string.IsNullOrWhiteSpace(input)) return 0m;
         var numericPart = new string(input.Where(c => char.IsDigit(c) || c == '.' || c == '-').ToArray());
         return decimal.TryParse(numericPart, out var result) ? result : 0m;
+    }
+
+    /// <summary>
+    /// Attempts to parse the string representation of a date in specific formats and outputs the parsed <see cref="DateTime"/>.
+    /// </summary>
+    /// <param name="value">The string to parse as a date.</param>
+    /// <param name="dateTime">
+    /// When this method returns, contains the <see cref="DateTime"/> value equivalent to the date contained in the input string, if the parsing succeeds; otherwise, the default value for <see cref="DateTime"/>.
+    /// This parameter is passed uninitialized.
+    /// </param>
+    /// <returns>
+    /// <c>true</c> if the string was successfully parsed into a <see cref="DateTime"/> value; otherwise, <c>false</c>.
+    /// </returns>
+    public static bool TryParseDate(
+        this string value,
+        out DateTime dateTime)
+    {
+        return DateTime.TryParseExact(
+            value,
+            ["yyyyMMdd", "yyyy-MM-dd"],
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.None,
+            out dateTime);
     }
 }
