@@ -65,7 +65,7 @@ public class ResponseData<T> : Response
     /// <param name="result"></param>
     /// <param name="code"></param>
     /// <param name="message"></param>
-    public ResponseData(EnumResponseResult result, string code, string message) : base(result, code, message)
+    public  ResponseData(EnumResponseResult result, string code, string message) : base(result, code, message)
     {
         Result = result;
         Code = code;
