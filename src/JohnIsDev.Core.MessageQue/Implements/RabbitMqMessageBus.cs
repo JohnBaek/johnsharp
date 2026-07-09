@@ -324,68 +324,68 @@ public class RabbitMqMessageBus : IMessageBus
         => await SubscribeRpcAsync(queue, queue.Replace("_", "."), exchangeType, messageHandler);
 
     /// <summary>
-    /// Subscribes to a RabbitMQ queue and listens for messages matching the specified routing key.
-    /// Processes the messages using the provided handler function.
+    /// Subscribes to a specified message queue and processes incoming messages using a provided handler.
+    /// This method allows consumers to receive messages from a RabbitMQ queue based on the specified exchange type.
     /// </summary>
-    /// <typeparam name="TMessage">The type of the message being handled.</typeparam>
-    /// <param name="queueName">The name of the queue to subscribe to.</param>
-    /// <param name="routingKey">The routing key used to filter messages within the exchange.</param>
-    /// <param name="messageHandler">The asynchronous function to process each received message.</param>
-    /// <returns>A Task that represents the asynchronous subscription operation.</returns>
+    /// <typeparam name="TMessage">The type of the message to be processed by the message handler.</typeparam>
+    /// <param name="queueName">The name of the queue to subscribe to for receiving messages.</param>
+    /// <param name="exchangeType">The type of the RabbitMQ exchange used to bind the queue (e.g., direct, fanout, topic).</param>
+    /// <param name="messageHandler">A delegate or function that processes the messages received from the queue.</param>
+    /// <returns>A Task that represents the asynchronous operation for subscribing to the message queue.</returns>
     public async Task SubscribeAsync<TMessage>(
         string queueName,
-        string routingKey,
+        string exchangeType,
         Func<TMessage, Task> messageHandler)
     {
         try
         {
-            // Create Chanel for Event
+            string routingKey = queueName.Replace("_", ".");
+            
             IChannel channel = await _connection.CreateChannelAsync();
             _subscribeChannels.Add(channel);
             
-            // Declare Exchange * caution without RPC 
-            string exchangeName = $"{_config.ExchangeName}.{routingKey.ToLower()}";
-            await channel.ExchangeDeclareAsync(exchangeName, routingKey, durable: true, autoDelete: false);
+            string exchangeName = $"{_config.ExchangeName}.{exchangeType.ToLower()}";
+            
+            await channel.ExchangeDeclareAsync(
+                exchange: exchangeName, 
+                type: exchangeType, 
+                durable: true, 
+                autoDelete: false);
+            
             await channel.QueueDeclareAsync(queue: queueName, durable: true, exclusive: false, autoDelete: false);
             await channel.QueueBindAsync(queue: queueName, exchange: exchangeName, routingKey: routingKey);
             
-            // Consume Event
             AsyncEventingBasicConsumer consumer = new AsyncEventingBasicConsumer(channel);
             _consumers.Add(consumer);
-            _logger.LogInformation("Consumer ready on { QueueName }", queueName);
+            _logger.LogInformation("Consumer ready on {QueueName}", queueName);
             
-            // Add delegate event
             consumer.ReceivedAsync += async (model, eventArgs) =>
             {
                 try
                 {
-                    // Parsing message and Deserialize Object
                     byte[] body = eventArgs.Body.ToArray();
                     string jsonRaw = Encoding.UTF8.GetString(body);
                     TMessage? message = JsonConvert.DeserializeObject<TMessage>(jsonRaw);
 
-                    // If message is not null, process it without waiting
                     if (message != null)
                     {
                         await messageHandler(message);
-                        await channel.BasicAckAsync(
-                            deliveryTag: eventArgs.DeliveryTag, multiple: false);
+                        await channel.BasicAckAsync(deliveryTag: eventArgs.DeliveryTag, multiple: false);
                     }
-                    // If message is null, log an error and nack the message
                     else
                     {
-                        // Remove the message from the queue
-                        _logger.LogError("Received null message on { QueueName }", queueName);
-                        await channel.BasicNackAsync(
-                            deliveryTag: eventArgs.DeliveryTag, multiple: false, requeue: false);
+                        _logger.LogError("Received null message on {QueueName}", queueName);
+                        await channel.BasicNackAsync(deliveryTag: eventArgs.DeliveryTag, multiple: false, requeue: false);
                     }
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError(e, "Error processing message on { QueueName }", queueName);
+                    _logger.LogError(e, "Error processing message on {QueueName}", queueName);
                     await channel.BasicNackAsync(eventArgs.DeliveryTag, false, false);
                 }
             };
+            
+            await channel.BasicConsumeAsync(queue: queueName, autoAck: false, consumer: consumer);
         }
         catch (Exception e)
         {

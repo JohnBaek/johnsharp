@@ -81,16 +81,17 @@ public interface IMessageBus : IDisposable
         string queue,
         string exchangeType,
         Func<TRequest, string, Task<TResponse>> messageHandler);
-    
+
     /// <summary>
-    /// Subscribes to a queue and processes incoming messages asynchronously.
+    /// Subscribes to a specified queue and processes incoming messages asynchronously.
     /// </summary>
-    /// <param name="queueName"></param>
-    /// <param name="routingKey"></param>
-    /// <param name="messageHandler"></param>
-    /// <typeparam name="TMessage"></typeparam>
+    /// <typeparam name="TMessage">The type of the message to be handled.</typeparam>
+    /// <param name="queueName">The name of the queue to subscribe to.</param>
+    /// <param name="exchangeType">The type of the exchange used for routing.</param>
+    /// <param name="messageHandler">A function that processes the incoming message. The function takes a message of type <typeparamref name="TMessage"/> as input and returns a task.</param>
+    /// <returns>A task representing the asynchronous subscription operation.</returns>
     Task SubscribeAsync<TMessage>(
         string queueName,
-        string routingKey,
+        string exchangeType,
         Func<TMessage, Task> messageHandler);
 }
