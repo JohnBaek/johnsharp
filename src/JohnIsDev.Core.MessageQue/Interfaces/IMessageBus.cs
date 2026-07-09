@@ -19,13 +19,13 @@ public interface IMessageBus : IDisposable
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="queue"></param>
+    /// <param name="queueName"></param>
     /// <param name="routingKey"></param>
     /// <param name="exchangeType"></param>
     /// <param name="messageHandler"></param>
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
-    Task SubscribeAsync<T>(string queue, string routingKey,string exchangeType, Func<T,string, Task<bool>> messageHandler);
+    Task SubscribeAsync<T>(string queueName, string routingKey,string exchangeType, Func<T,string, Task<bool>> messageHandler);
 
     /// <summary>
     /// Publishes a message for Remote Procedure Call (RPC) and waits for a response asynchronously.
@@ -81,4 +81,16 @@ public interface IMessageBus : IDisposable
         string queue,
         string exchangeType,
         Func<TRequest, string, Task<TResponse>> messageHandler);
+    
+    /// <summary>
+    /// Subscribes to a queue and processes incoming messages asynchronously.
+    /// </summary>
+    /// <param name="queueName"></param>
+    /// <param name="routingKey"></param>
+    /// <param name="messageHandler"></param>
+    /// <typeparam name="TMessage"></typeparam>
+    Task SubscribeAsync<TMessage>(
+        string queueName,
+        string routingKey,
+        Func<TMessage, Task> messageHandler);
 }

@@ -323,6 +323,76 @@ public class RabbitMqMessageBus : IMessageBus
         Func<TRequest, string, Task<TResponse>> messageHandler)
         => await SubscribeRpcAsync(queue, queue.Replace("_", "."), exchangeType, messageHandler);
 
+    /// <summary>
+    /// Subscribes to a RabbitMQ queue and listens for messages matching the specified routing key.
+    /// Processes the messages using the provided handler function.
+    /// </summary>
+    /// <typeparam name="TMessage">The type of the message being handled.</typeparam>
+    /// <param name="queueName">The name of the queue to subscribe to.</param>
+    /// <param name="routingKey">The routing key used to filter messages within the exchange.</param>
+    /// <param name="messageHandler">The asynchronous function to process each received message.</param>
+    /// <returns>A Task that represents the asynchronous subscription operation.</returns>
+    public async Task SubscribeAsync<TMessage>(
+        string queueName,
+        string routingKey,
+        Func<TMessage, Task> messageHandler)
+    {
+        try
+        {
+            // Create Chanel for Event
+            IChannel channel = await _connection.CreateChannelAsync();
+            _subscribeChannels.Add(channel);
+            
+            // Declare Exchange * caution without RPC 
+            string exchangeName = $"{_config.ExchangeName}.{routingKey.ToLower()}";
+            await channel.ExchangeDeclareAsync(exchangeName, routingKey, durable: true, autoDelete: false);
+            await channel.QueueDeclareAsync(queue: queueName, durable: true, exclusive: false, autoDelete: false);
+            await channel.QueueBindAsync(queue: queueName, exchange: exchangeName, routingKey: routingKey);
+            
+            // Consume Event
+            AsyncEventingBasicConsumer consumer = new AsyncEventingBasicConsumer(channel);
+            _consumers.Add(consumer);
+            _logger.LogInformation("Consumer ready on { QueueName }", queueName);
+            
+            // Add delegate event
+            consumer.ReceivedAsync += async (model, eventArgs) =>
+            {
+                try
+                {
+                    // Parsing message and Deserialize Object
+                    byte[] body = eventArgs.Body.ToArray();
+                    string jsonRaw = Encoding.UTF8.GetString(body);
+                    TMessage? message = JsonConvert.DeserializeObject<TMessage>(jsonRaw);
+
+                    // If message is not null, process it without waiting
+                    if (message != null)
+                    {
+                        await messageHandler(message);
+                        await channel.BasicAckAsync(
+                            deliveryTag: eventArgs.DeliveryTag, multiple: false);
+                    }
+                    // If message is null, log an error and nack the message
+                    else
+                    {
+                        // Remove the message from the queue
+                        _logger.LogError("Received null message on { QueueName }", queueName);
+                        await channel.BasicNackAsync(
+                            deliveryTag: eventArgs.DeliveryTag, multiple: false, requeue: false);
+                    }
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(e, "Error processing message on { QueueName }", queueName);
+                    await channel.BasicNackAsync(eventArgs.DeliveryTag, false, false);
+                }
+            };
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "An error occurred while subscribing to the queue.");
+        }
+    }
+
 
     /// <summary>
     /// Subscribes to a specified topic and routing key in the message queue and processes messages using
@@ -330,13 +400,13 @@ public class RabbitMqMessageBus : IMessageBus
     /// exchange type, and the handler function for processing incoming messages.
     /// </summary>
     /// <typeparam name="T">The type of the message to be handled.</typeparam>
-    /// <param name="queue">The topic or queue name to subscribe to.</param>
+    /// <param name="queueName">The topic or queue name to subscribe to.</param>
     /// <param name="routingKey">The routing key associated with the subscription.</param>
     /// <param name="exchangeType">The type of the exchange (e.g., direct, fanout, topic).</param>
     /// <param name="messageHandler">A function that handles the incoming message and returns a Task<bool>
     /// indicating whether the message was successfully handled or not.</param>
     /// <returns>A Task representing the asynchronous operation for message subscription.</returns>
-    public async Task SubscribeAsync<T>(string queue, string routingKey, string exchangeType,
+    public async Task SubscribeAsync<T>(string queueName, string routingKey, string exchangeType,
         Func<T, string,Task<bool>> messageHandler) 
     {
         try
@@ -352,14 +422,14 @@ public class RabbitMqMessageBus : IMessageBus
             
             // Declare a Queue 
             await channel.QueueDeclareAsync(
-                  queue: $"{queue}" 
+                  queue: $"{queueName}" 
                 , durable: true
                 , exclusive: false
                 , autoDelete: false
                 , arguments: null);
             
             await channel.QueueBindAsync(
-                  queue: $"{queue}" 
+                  queue: $"{queueName}" 
                 , exchange: exchangeName
                 , routingKey: routingKey);
 
@@ -367,7 +437,7 @@ public class RabbitMqMessageBus : IMessageBus
             AsyncEventingBasicConsumer consumer = new AsyncEventingBasicConsumer(channel);
             _consumers.Add(consumer);
             
-            _logger.LogInformation($"Subscribe to {exchangeName} with routingKey {routingKey} with queueName {queue}");
+            _logger.LogInformation($"Subscribe to {exchangeName} with routingKey {routingKey} with queueName {queueName}");
             
             consumer.ReceivedAsync += async (model, eventArgs) =>
             {
@@ -406,7 +476,7 @@ public class RabbitMqMessageBus : IMessageBus
             };
             
             // Consume
-            await channel.BasicConsumeAsync(queue: queue , autoAck: false , consumer: consumer);
+            await channel.BasicConsumeAsync(queue: queueName , autoAck: false , consumer: consumer);
         }
         catch (Exception e)
         {
