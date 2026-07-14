@@ -83,6 +83,7 @@ public interface IQueryExecutor<TDbContext> where TDbContext : DbContext
         where TConvert : class
         where TQueryable : class;
 
+
     /// <summary>
     /// Maps a queryable source to a list of a different type and converts the result into a ResponseList.
     /// </summary>

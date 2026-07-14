@@ -712,7 +712,7 @@ public class QueryBuilder<TDbContext>(
             {
                 if(requestQuery.SortOrders == null)
                     continue;
-                
+                 
                 QuerySortOrder add = new QuerySortOrder
                 {
                     Field = requestQuery.SortFields[i] ,

@@ -1,5 +1,8 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using JohnIsDev.Core.Models.Common.Enums;
 
@@ -190,4 +193,14 @@ public class RequestQuery
     /// Indicates whether the query request contains no search instructions.
     /// </summary>
     public bool HasNoSearchRequest => SearchMetas.Count == 0;
+
+    /// <summary>
+    /// Computes a unique cache key by serializing the current state of the object and applying a SHA256 hash.
+    /// </summary>
+    /// <returns>A hexadecimal representation of the hash, generated from the serialized object state.</returns>
+    public string GetCacheKey()
+    {
+        string json = JsonSerializer.Serialize(this);
+        return Convert.ToHexString( SHA256.HashData(Encoding.UTF8.GetBytes(json)));
+    }
 }

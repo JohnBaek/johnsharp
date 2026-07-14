@@ -1,5 +1,6 @@
 using JohnIsDev.Core.EntityFramework.Interfaces;
 using JohnIsDev.Core.Extensions;
+using JohnIsDev.Core.Features.Helpers;
 using JohnIsDev.Core.Models.Common.Enums;
 using JohnIsDev.Core.Models.Common.Query;
 using JohnIsDev.Core.Models.Responses;
@@ -159,6 +160,8 @@ public class QueryExecutor<TDbContext>(
     {
         try
         {
+            requestQuery = requestQuery.PrepareRanges(EntityMapper.ToEntry<T>());
+            
             // Select a total count
             int totalCount = await queryable.AsNoTracking().CountAsync();
             
@@ -198,6 +201,8 @@ public class QueryExecutor<TDbContext>(
     {
         try
         {
+            requestQuery = requestQuery.PrepareRanges(EntityMapper.ToEntry<TConvert>());
+            
             // Get a data ResponseList<TQueryable>
             ResponseList<TQueryable> result = await ToResponseListAsync(queryable, requestQuery);
             
