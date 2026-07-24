@@ -89,6 +89,8 @@ public class RabbitMqMessageBus : IMessageBus
     {
         try
         {
+            _logger.LogInformation($"Publish to exchangeName: {exchangeName} with routingKey {routingKey}");
+            
             // Create Chanel
             await using IChannel channel = await _connection.CreateChannelAsync();
 
@@ -339,6 +341,8 @@ public class RabbitMqMessageBus : IMessageBus
     {
         try
         {
+            _logger.LogInformation($"Subscribe to exchangeName: {queueName}");
+            
             string routingKey = queueName.Replace("_", ".");
             
             IChannel channel = await _connection.CreateChannelAsync();
