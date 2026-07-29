@@ -1,5 +1,7 @@
 using System.Collections;
 using System.Reflection;
+using System.Security.Cryptography;
+using System.Text;
 using Newtonsoft.Json;
 
 namespace JohnIsDev.Core.Extensions;
@@ -366,4 +368,17 @@ public static class ObjectExtensions
         }
     }
 
+    /// <summary>
+    /// Generates a SHA-256 hash for the provided object.
+    /// </summary>
+    /// <param name="source">The object to be hashed.</param>
+    /// <returns>A hexadecimal string representation of the SHA-256 hash.</returns>
+    public static string GetHash(this object source)
+    {
+        string jsonString = System.Text.Json.JsonSerializer.Serialize(source);
+        byte[] bytes = Encoding.UTF8.GetBytes(jsonString);
+        byte[] hashBytes = SHA256.HashData(bytes);
+
+        return Convert.ToHexString(hashBytes);
+    }
 }
