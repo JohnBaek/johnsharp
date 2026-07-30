@@ -373,12 +373,23 @@ public static class ObjectExtensions
     /// </summary>
     /// <param name="source">The object to be hashed.</param>
     /// <returns>A hexadecimal string representation of the SHA-256 hash.</returns>
-    public static string GetHash(this object source)
+    public static string GetHashString(this object source)
     {
         string jsonString = System.Text.Json.JsonSerializer.Serialize(source);
         byte[] bytes = Encoding.UTF8.GetBytes(jsonString);
         byte[] hashBytes = SHA256.HashData(bytes);
 
         return Convert.ToHexString(hashBytes);
+    }
+
+    /// <summary>
+    /// Computes a SHA-256 hash of the serialized representation of the given object and returns the result as a byte array.
+    /// </summary>
+    /// <param name="source">The object to hash.</param>
+    /// <returns>A byte array containing the computed SHA-256 hash of the serialized object.</returns>
+    public static byte[] GetHashBytes(this object source)
+    {
+        string jsonString = System.Text.Json.JsonSerializer.Serialize(source);
+        return SHA256.HashData(Encoding.UTF8.GetBytes(jsonString));
     }
 }
