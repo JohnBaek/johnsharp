@@ -19,22 +19,22 @@ public static class GuidExtension
             .Replace('+', '-')
             .Replace('/', '_');
     }
-
+    
     /// <summary>
     /// URL Safe Base64 문자열(22자리)을 Guid로 변환합니다.
     /// </summary>
     /// <param name="value">22자리 URL Safe Base64 문자열</param>
     /// <returns>Guid</returns>
     /// <exception cref="ArgumentNullException">입력 값이 null이거나 공백인 경우</exception>
-    public static Guid ToGuid(this string value)
+    public static Guid FromShortStringToGuid(this string value)
     {
         if (string.IsNullOrWhiteSpace(value))
             throw new ArgumentNullException(nameof(value));
-
+    
         string base64 = value
             .Replace('-', '+')
             .Replace('_', '/');
-
+    
         switch (base64.Length % 4)
         {
             case 2:
@@ -44,7 +44,7 @@ public static class GuidExtension
                 base64 += "=";
                 break;
         }
-
+    
         return new Guid(Convert.FromBase64String(base64));
     }
 }
