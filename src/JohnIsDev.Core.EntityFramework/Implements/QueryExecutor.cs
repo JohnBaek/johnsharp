@@ -201,8 +201,6 @@ public class QueryExecutor<TDbContext>(
     {
         try
         {
-            requestQuery = requestQuery.PrepareRanges(EntityMapper.ToEntry<TConvert>());
-            
             // Get a data ResponseList<TQueryable>
             ResponseList<TQueryable> result = await ToResponseListAsync(queryable, requestQuery);
             

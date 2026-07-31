@@ -14,8 +14,20 @@ public interface IQueryBuilder<TDbContext> where TDbContext : DbContext
     /// <param name="requestQuery">requestQuery</param>
     /// <typeparam name="T"></typeparam>
     /// <returns>IQueryable</returns>
-    IQueryable<T>? BuildQuery<T>(RequestQuery requestQuery) where T : class;
-    
+    IQueryable<T>? BuildQuery<T>(RequestQuery requestQuery)
+        where T : class;
+
+    /// <summary>
+    /// Constructs a query based on the specified request parameters.
+    /// </summary>
+    /// <typeparam name="T">The type of the entity to query.</typeparam>
+    /// <typeparam name="TQueryModel">The type of the query model used for transformation.</typeparam>
+    /// <param name="requestQuery">An object containing the query parameters, including filtering, sorting, and pagination details.</param>
+    /// <returns>An <see cref="IQueryable{T}"/> instance representing the constructed query, or null if the query could not be built.</returns>
+    IQueryable<T>? BuildQuery<T, TQueryModel>(RequestQuery requestQuery)
+        where T : class
+        where TQueryModel : class;
+
     /// <summary>
     /// Build a Query
     /// </summary>

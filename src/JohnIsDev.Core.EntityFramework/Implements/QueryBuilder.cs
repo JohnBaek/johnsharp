@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using JohnIsDev.Core.EntityFramework.Interfaces;
 using JohnIsDev.Core.Features.Extensions;
+using JohnIsDev.Core.Features.Helpers;
 using JohnIsDev.Core.Models.Common.Enums;
 using JohnIsDev.Core.Models.Common.Query;
 using Microsoft.EntityFrameworkCore;
@@ -46,6 +47,17 @@ public class QueryBuilder<TDbContext>(
     public IQueryable<T>? BuildQuery<T>(RequestQuery requestQuery) where T : class
         => BuildQuery(requestQuery , dbContext.Set<T>().AsNoTracking());
 
+    /// <summary>
+    /// Builds a query based on the provided request query and maps it to the specified query model type.
+    /// </summary>
+    /// <typeparam name="T">The type of entity for the query.</typeparam>
+    /// <typeparam name="TQueryModel">The type of the query model used for mapping.</typeparam>
+    /// <param name="requestQuery">The request query object containing filters, sorting, and pagination criteria.</param>
+    /// <returns>An IQueryable of type T that represents the built query, or null if not applicable.</returns>
+    public IQueryable<T>? BuildQuery<T, TQueryModel>(RequestQuery requestQuery)
+        where T : class where TQueryModel : class
+        => BuildQuery<T>(requestQuery.PrepareRanges(EntityMapper.ToEntry<TQueryModel>()));
+    
 
     /// <summary>
     /// Builds a query based on the provided request query and an IQueryable.
