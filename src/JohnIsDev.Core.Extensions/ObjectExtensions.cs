@@ -392,4 +392,20 @@ public static class ObjectExtensions
         string jsonString = System.Text.Json.JsonSerializer.Serialize(source);
         return SHA256.HashData(Encoding.UTF8.GetBytes(jsonString));
     }
+
+    /// <summary>
+    /// Determines whether the hash of the specified object matches the provided hash, and computes the current hash of the object.
+    /// </summary>
+    /// <param name="source">The object to compare and compute the hash for.</param>
+    /// <param name="existingHash">The hash to compare against.</param>
+    /// <param name="newHash">The computed hash of the object.</param>
+    /// <returns>True if the existing hash matches the computed hash of the object; otherwise, false.</returns>
+    public static bool HashEquality(this object source, byte[]? existingHash, out byte[] newHash)
+    {
+        // Extract Hash 
+        newHash = source.GetHashBytes();
+        return existingHash is not null 
+               // Sequential Identity
+               && ((ReadOnlySpan<byte>) existingHash).SequenceEqual(newHash);
+    }
 }
