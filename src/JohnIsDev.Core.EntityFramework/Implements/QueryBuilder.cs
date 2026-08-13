@@ -68,60 +68,60 @@ public class QueryBuilder<TDbContext>(
     /// <returns>An IQueryable of type T with the applied query conditions, or null if an error occurs.</returns>
     // JohnIsDev.Core.EntityFramework.EFQueryProvider.Implements.QueryBuilder
     public IQueryable<T>? BuildQuery<T>(RequestQuery requestQuery, IQueryable<T> queryable) where T : class
-{
-    try
     {
-        // Add Where Condition 
-        Expression<Func<T, bool>>? whereCondition = CreateSearchConditions<T>(requestQuery);
-        if (whereCondition != null)
-            queryable = queryable.Where(whereCondition);
-        
-        IEnumerable<QuerySortOrder> sortOrders = ConvertToQuerySortList(requestQuery);
-        bool isFirstSort = true;
-        
-        PropertyInfo[] cachedProperties = GetCachedProperties<T>();
-
-        foreach (QuerySortOrder sortOrder in sortOrders)
+        try
         {
-            PropertyInfo? propertyInfo = cachedProperties
-                .FirstOrDefault(p => p.Name.Equals(sortOrder.Field, StringComparison.OrdinalIgnoreCase));
+            // Add Where Condition 
+            Expression<Func<T, bool>>? whereCondition = CreateSearchConditions<T>(requestQuery);
+            if (whereCondition != null)
+                queryable = queryable.Where(whereCondition);
+            
+            IEnumerable<QuerySortOrder> sortOrders = ConvertToQuerySortList(requestQuery);
+            bool isFirstSort = true;
+            
+            PropertyInfo[] cachedProperties = GetCachedProperties<T>();
 
-            if (propertyInfo == null)
-                continue;
-
-            ParameterExpression parameter = Expression.Parameter(typeof(T), "x");
-            MemberExpression propertyAccess = Expression.Property(parameter, propertyInfo);
-            LambdaExpression orderByExpression = Expression.Lambda(propertyAccess, parameter);
-
-            string methodName;
-            if (isFirstSort)
+            foreach (QuerySortOrder sortOrder in sortOrders)
             {
-                methodName = sortOrder.Order == EnumQuerySortOrder.Asc ? "OrderBy" : "OrderByDescending";
-                isFirstSort = false;
-            }
-            else
-            {
-                methodName = sortOrder.Order == EnumQuerySortOrder.Asc ? "ThenBy" : "ThenByDescending";
-            }
+                PropertyInfo? propertyInfo = cachedProperties
+                    .FirstOrDefault(p => p.Name.Equals(sortOrder.Field, StringComparison.OrdinalIgnoreCase));
 
-            MethodCallExpression resultExpression = Expression.Call(
-                typeof(Queryable),
-                methodName,
-                [typeof(T), propertyInfo.PropertyType], 
-                queryable.Expression,
-                Expression.Quote(orderByExpression)
-            );
+                if (propertyInfo == null)
+                    continue;
 
-            queryable = queryable.Provider.CreateQuery<T>(resultExpression);
+                ParameterExpression parameter = Expression.Parameter(typeof(T), "x");
+                MemberExpression propertyAccess = Expression.Property(parameter, propertyInfo);
+                LambdaExpression orderByExpression = Expression.Lambda(propertyAccess, parameter);
+
+                string methodName;
+                if (isFirstSort)
+                {
+                    methodName = sortOrder.Order == EnumQuerySortOrder.Asc ? "OrderBy" : "OrderByDescending";
+                    isFirstSort = false;
+                }
+                else
+                {
+                    methodName = sortOrder.Order == EnumQuerySortOrder.Asc ? "ThenBy" : "ThenByDescending";
+                }
+
+                MethodCallExpression resultExpression = Expression.Call(
+                    typeof(Queryable),
+                    methodName,
+                    [typeof(T), propertyInfo.PropertyType], 
+                    queryable.Expression,
+                    Expression.Quote(orderByExpression)
+                );
+
+                queryable = queryable.Provider.CreateQuery<T>(resultExpression);
+            }
+            return queryable;
         }
-        return queryable;
+        catch (Exception e)
+        {
+            logger.LogError(e, e.Message);
+            return null;
+        }
     }
-    catch (Exception e)
-    {
-        logger.LogError(e, e.Message);
-        return null;
-    }
-}
 
 
     /// <summary>
