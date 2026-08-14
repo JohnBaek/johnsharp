@@ -27,8 +27,6 @@ public class SystemKeyUtil()
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
             hardwareInfo = GetMacUniqueKey().Replace("-", "").ToLower();
-            
-            
         }
 
         using SHA256 sha256 = SHA256.Create();
@@ -36,10 +34,18 @@ public class SystemKeyUtil()
         return Convert.ToHexString(bytes).ToLower();
     }
     
+    private string GetWindowsMachineGuid()
+    {
+        using RegistryKey? key = Registry.LocalMachine.OpenSubKey(
+            @"SOFTWARE\Microsoft\Cryptography");
+        return key?.GetValue("MachineGuid")?.ToString() ?? throw new Exception("MachineGuid not found");
+    }
+    
     public string GetSimpleHardwareFingerprint()
     {
-        string id = Environment.MachineName + Environment.UserName + RuntimeInformation.OSDescription;
-        return id;
+        string machineGuid = GetWindowsMachineGuid();
+        string machineName = Environment.MachineName;
+        return $"{machineGuid}|{machineName}";
     }
     
     /// <summary>
