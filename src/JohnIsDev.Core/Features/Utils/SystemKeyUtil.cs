@@ -36,8 +36,7 @@ public class SystemKeyUtil()
     
     private string GetWindowsMachineGuid()
     {
-        using RegistryKey? key = Registry.LocalMachine.OpenSubKey(
-            @"SOFTWARE\Microsoft\Cryptography");
+        using RegistryKey? key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Cryptography");
         return key?.GetValue("MachineGuid")?.ToString() ?? throw new Exception("MachineGuid not found");
     }
     
