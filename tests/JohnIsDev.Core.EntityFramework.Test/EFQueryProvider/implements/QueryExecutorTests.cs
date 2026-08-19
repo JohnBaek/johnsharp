@@ -258,6 +258,60 @@ public class QueryBuilderTests : IDisposable, IAsyncDisposable
     }
 
     /// <summary>
+    /// Verifies that a search condition built for one entity type is never reused for a different entity type
+    /// that happens to declare a property with the same name and the same search type.
+    /// </summary>
+    /// <remarks>
+    /// A condition expression holds a PropertyInfo bound to the entity it was built for. Any cache or reuse keyed
+    /// on field name, search type and keyword alone - without the entity type - hands the second entity an
+    /// expression pointing at the first entity's property. Rebinding that throws, the exception is swallowed by
+    /// the query builder, the WHERE clause is dropped entirely and every row comes back. This test guards against
+    /// such an optimisation being reintroduced.
+    /// </remarks>
+    /// <returns>A task representing the asynchronous operation of the test.</returns>
+    [Fact]
+    public async Task BuildQuery_WithSameFieldNameOnDifferentEntities_ShouldNotReuseCachedCondition()
+    {
+        // Arrange - both entities declare a "Name" string property, and exactly one row of each matches
+        const string keyword = "CrossEntityCacheProbe";
+
+        await _dbContext.Users.AddRangeAsync(
+            new TestUser { Id = 1, Name = keyword, Age = 30, IsActive = true, CreatedDate = DateTime.Now },
+            new TestUser { Id = 2, Name = "Unrelated", Age = 31, IsActive = true, CreatedDate = DateTime.Now });
+
+        await _dbContext.Products.AddRangeAsync(
+            new TestProduct { Id = 1, Name = keyword, Price = 1000 },
+            new TestProduct { Id = 2, Name = "Unrelated", Price = 2000 },
+            new TestProduct { Id = 3, Name = "AlsoUnrelated", Price = 3000 });
+
+        await _dbContext.SaveChangesAsync();
+
+        RequestQuery BuildRequest() => new()
+        {
+            SearchMetas = [ new RequestQuerySearchMeta { Field = "Name", SearchType = EnumQuerySearchType.Like } ],
+            SearchFields = [ "Name" ],
+            SearchKeywords = [ keyword ]
+        };
+
+        // Act - query TestUser first, then query TestProduct with the identical field name,
+        //       search type and keyword
+        IQueryable<TestUser>? users = _queryBuilder.BuildQuery<TestUser>(BuildRequest());
+        IQueryable<TestProduct>? products = _queryBuilder.BuildQuery<TestProduct>(BuildRequest());
+
+        // Assert
+        users.Should().NotBeNull();
+        products.Should().NotBeNull();
+
+        List<TestUser> userResult = await users!.ToListAsync();
+        userResult.Should().ContainSingle().Which.Name.Should().Be(keyword);
+
+        List<TestProduct> productResult = await products!.ToListAsync();
+        productResult.Should()
+            .ContainSingle("the WHERE clause must be built from TestProduct.Name, not reused from TestUser.Name")
+            .Which.Name.Should().Be(keyword);
+    }
+
+    /// <summary>
     /// Disposes the resources used by the test class. This method releases internal resources such as the database context
     /// and database connection, ensuring proper cleanup after the execution of the tests.
     /// </summary>
@@ -304,6 +358,13 @@ public class TestDbContext : DbContext
     /// of user data within the database context for testing purposes.
     /// </summary>
     public DbSet<TestUser> Users { get; set; }
+
+    /// <summary>
+    /// Gets or sets the DbSet representing the collection of products in the database.
+    /// Exists so tests can verify that conditions built for one entity are not reused for another
+    /// entity declaring a property of the same name.
+    /// </summary>
+    public DbSet<TestProduct> Products { get; set; }
 }
 
 /// <summary>
@@ -318,4 +379,15 @@ public class TestUser
     public int Age { get; set; }
     public bool IsActive { get; set; }
     public DateTime CreatedDate { get; set; }
+}
+
+/// <summary>
+/// Represents a product entity for test. Declares a <c>Name</c> string property on purpose, so that it collides
+/// with <see cref="TestUser.Name"/> in the query builder's expression cache key.
+/// </summary>
+public class TestProduct
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = "";
+    public int Price { get; set; }
 }

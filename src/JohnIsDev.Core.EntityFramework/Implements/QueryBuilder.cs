@@ -488,13 +488,6 @@ public class QueryBuilder<TDbContext>(
         Expression? result = null;
         try
         {
-            // Check has cache before Create an expression
-            string cacheKey = "";
-            if (meta.SearchType == EnumQuerySearchType.RangeDate)
-                cacheKey = $"{meta.Field}_{meta.SearchType}_{query.StartDate:yyyy-MM-dd}_{query.EndDate:yyyy-MM-dd} ";
-            else
-                cacheKey = $"{meta.Field}_{meta.SearchType}_{string.Join(",", keywords)}";
-            
             // Process all Keywords
             foreach (string keyword in keywords)
             {
