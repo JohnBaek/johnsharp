@@ -25,13 +25,6 @@ public class QueryBuilder<TDbContext>(
 ) : IQueryBuilder<TDbContext> where TDbContext : DbContext
 {
     /// <summary>
-    /// A thread-safe cache for storing and reusing compiled expressions.
-    /// This static dictionary is keyed by a string representing the unique identifier of an expression,
-    /// allowing previously compiled expressions to be retrieved without recompilation for performance optimization.
-    /// </summary>
-    private static readonly ConcurrentDictionary<string, Expression> ExpressionCache = new();
-
-    /// <summary>
     /// A thread-safe, static cache storing metadata information about entity properties.
     /// This dictionary is keyed by the entity type and stores an array of PropertyInfo objects,
     /// enabling efficient reuse and reduction of reflection overhead during runtime.
@@ -387,58 +380,6 @@ public class QueryBuilder<TDbContext>(
         return value != null;
     }
     
-
-    /// <summary>
-    /// Create a where statement by meta-information
-    /// </summary>
-    /// <param name="requestQuery"></param>
-    // private List<Expression<Func<T, bool>>> CreateSearchConditions<T>(RequestQuery requestQuery)
-    // {
-    //     List<Expression<Func<T, bool>>> conditions = [];
-    //     try
-    //     {
-    //         // Convert Client request 
-    //         IEnumerable<QuerySearch> convertedQuerySearches = ConvertToQuerySearchListInternal(requestQuery);
-    //         
-    //         // Process all
-    //         foreach (QuerySearch querySearch in convertedQuerySearches)
-    //         {
-    //             // Find Target Meta 
-    //             RequestQuerySearchMeta? meta = requestQuery.SearchMetas
-    //                 .Find(i => 
-    //                     i.Field.Equals(querySearch.Field, StringComparison.CurrentCultureIgnoreCase));
-    //
-    //             // Does not have a meta 
-    //             if(meta == null)
-    //                 continue;
-    //             
-    //             // Alias
-    //             ParameterExpression parameterExpression = Expression.Parameter(typeof(T), "x");
-    //             
-    //             // MemberExpression
-    //             MemberExpression memberExpression = Expression.Property(parameterExpression, meta.Field);
-    //             
-    //             // To Create a Keyword list by split ; 
-    //             List<string> searchKeywords = querySearch.Keyword?.Split(';').ToList() ?? [];
-    //             
-    //             // Process By Meta types
-    //             Expression? conditionExpression = CreateConditionExpression(meta: meta , query: querySearch , memberExpression: memberExpression ,keywords: searchKeywords);
-    //             
-    //             // If it cannot make
-    //             if(conditionExpression == null)
-    //                 continue;
-    //             
-    //             // Add Conditions
-    //             conditions.Add(Expression.Lambda<Func<T, bool>>(conditionExpression, parameterExpression));
-    //         }
-    //     }
-    //     catch (Exception e)
-    //     {
-    //         logger.LogError(e, e.Message);
-    //     }
-    //     return conditions;
-    // }
-    
     /// <summary>
     /// ConvertToQuerySearchList
     /// </summary>
@@ -550,16 +491,9 @@ public class QueryBuilder<TDbContext>(
             // Check has cache before Create an expression
             string cacheKey = "";
             if (meta.SearchType == EnumQuerySearchType.RangeDate)
-            {
                 cacheKey = $"{meta.Field}_{meta.SearchType}_{query.StartDate:yyyy-MM-dd}_{query.EndDate:yyyy-MM-dd} ";
-            }
             else
-            {
                 cacheKey = $"{meta.Field}_{meta.SearchType}_{string.Join(",", keywords)}";
-            }
-            
-            if(ExpressionCache.TryGetValue(cacheKey, out Expression? expression))
-                return expression;
             
             // Process all Keywords
             foreach (string keyword in keywords)
@@ -635,10 +569,6 @@ public class QueryBuilder<TDbContext>(
                         break;
                 }
             }
-            
-            // Add Cache
-            if(result != null)
-                ExpressionCache.TryAdd(cacheKey, result);
         }
         catch (Exception e)
         {
