@@ -105,7 +105,18 @@ public class RequestQuery
     /// </summary>
     [JsonIgnore]
     public List<RequestQuerySearchMeta> SearchMetas { get; set; } = [];
+
+    /// <summary>
+    /// A set of fields used for global search operations within the query.
+    /// </summary>
+    public HashSet<string> GlobalSearchFields { get; set; } = [];
+
+    /// <summary>
+    /// Represents a global keyword for performing a search across multiple fields.
+    /// </summary>
+    public string? GlobalSearchKeyword { get; set; }
     
+    [JsonIgnore] public bool HasGlobalSearch => GlobalSearchFields.Count > 0 && !string.IsNullOrEmpty(GlobalSearchKeyword);
     
     /// <summary>
     /// Extra Header Names 

@@ -245,6 +245,7 @@ public class QueryBuilder<TDbContext>(
             Expression? combinedExpression = null;
             IEnumerable<QuerySearch> convertedQuerySearches = ConvertToQuerySearchListInternal(requestQuery);
         
+            // And Conditions
             foreach (QuerySearch querySearch in convertedQuerySearches)
             {
                 RequestQuerySearchMeta? meta = requestQuery.SearchMetas
@@ -253,17 +254,14 @@ public class QueryBuilder<TDbContext>(
                 if (meta == null)
                     continue;
                 
-                var tempParameter = Expression.Parameter(typeof(T), "p");
-                var memberExpression = Expression.Property(tempParameter, meta.Field);
+                ParameterExpression tempParameter = Expression.Parameter(typeof(T), "p");
+                MemberExpression memberExpression = Expression.Property(tempParameter, meta.Field);
             
-                // MemberExpression memberExpression = Expression.Property(parameterExpression, meta.Field);
                 List<string> searchKeywords = querySearch.Keyword?.Split(';').ToList() ?? [];
-            
                 Expression? singleCondition = CreateConditionExpression(meta, querySearch, memberExpression, searchKeywords);
 
                 if (singleCondition == null)
                     continue;
-                
                 
                 if (combinedExpression == null)
                 {
@@ -271,14 +269,18 @@ public class QueryBuilder<TDbContext>(
                 }
                 else
                 {
-                    var rewrittenCondition = new ParameterReplacer(parameterExpression).Visit(singleCondition);
+                    Expression rewrittenCondition = new ParameterReplacer(parameterExpression).Visit(singleCondition);
                     combinedExpression = Expression.AndAlso(combinedExpression, rewrittenCondition);
                 }
-                
-                //
-                // combinedExpression = combinedExpression == null
-                //     ? singleCondition
-                //     : Expression.AndAlso(combinedExpression, singleCondition);
+            }
+            
+            // Global Search (OR Group), And-ed with the conditions above
+            Expression? globalCondition = CreateGlobalSearchCondition<T>(requestQuery, parameterExpression);
+            if (globalCondition != null)
+            {
+                combinedExpression = combinedExpression == null
+                    ? globalCondition
+                    : Expression.AndAlso(combinedExpression, globalCondition);
             }
 
             return combinedExpression != null
@@ -292,6 +294,98 @@ public class QueryBuilder<TDbContext>(
         }
     }
 
+    /// <summary>
+    /// Creates a global search condition expression based on the provided request query and the parameter expression.
+    /// </summary>
+    /// <typeparam name="T">The type of the entity being queried.</typeparam>
+    /// <param name="requestQuery">The request query object containing global search fields and keyword.</param>
+    /// <param name="parameter">The parameter expression representing the entity in the LINQ expression tree.</param>
+    /// <returns>An expression representing the global search condition, or null if no global search is required.</returns>
+    private Expression? CreateGlobalSearchCondition<T>(RequestQuery requestQuery, ParameterExpression parameter)
+    {
+        if (!requestQuery.HasGlobalSearch)
+            return null;
+
+        string keyword = requestQuery.GlobalSearchKeyword!.Trim();
+        Expression? orGroup = null;
+
+        foreach (string field in requestQuery.GlobalSearchFields)
+        {
+            // Only fields declared in SearchMetas are allowed (SearchMetas is server-side, GlobalSearchFields is not)
+            RequestQuerySearchMeta? meta = requestQuery.SearchMetas
+                .Find(i => i.Field.Equals(field, StringComparison.OrdinalIgnoreCase));
+
+            if (meta == null)
+                continue;
+
+            MemberExpression memberExpression = Expression.Property(parameter, meta.Field);
+            Expression? condition = CreateGlobalFieldCondition(memberExpression, keyword);
+
+            if (condition == null)
+                continue;
+
+            orGroup = orGroup == null ? condition : Expression.OrElse(orGroup, condition);
+        }
+
+        return orGroup;
+    }
+    
+
+    /// <summary>
+    /// Creates a global field condition based on the member expression and a keyword.
+    /// </summary>
+    /// <param name="member">The member expression representing the field in the query.</param>
+    /// <param name="keyword">The keyword used to filter the field, supporting both LIKE operations for strings and equality for other types.</param>
+    /// <returns>An Expression representing the condition to be applied in the query, or null if the condition cannot be created.</returns>
+    private static Expression? CreateGlobalFieldCondition(MemberExpression member, string keyword)
+    {
+        Type memberType = Nullable.GetUnderlyingType(member.Type) ?? member.Type;
+
+        // string -> LIKE %keyword%
+        if (memberType == typeof(string))
+        {
+            MethodInfo? likeMethod = typeof(DbFunctionsExtensions)
+                .GetMethod("Like", [typeof(DbFunctions), typeof(string), typeof(string)]);
+
+            if (likeMethod == null)
+                return null;
+
+            return Expression.Call(null, likeMethod,
+                Expression.Constant(EF.Functions), member, Expression.Constant($"%{keyword}%"));
+        }
+
+        // everything else -> equality, only when the keyword actually parses into the field type
+        if (!TryParseGlobalConstant(keyword, memberType, out object? parsed))
+            return null;
+
+        return Expression.Equal(member, Expression.Constant(parsed, member.Type));
+    }
+    
+
+    /// <summary>
+    /// Attempts to parse a global constant defined by a keyword into an object of the provided type.
+    /// </summary>
+    /// <param name="keyword">The string representation of the value to parse.</param>
+    /// <param name="type">The target type to parse the keyword into, such as int, float, Guid, or an enum type.</param>
+    /// <param name="value">When this method returns, contains the parsed object if the parsing was successful, or null if the parsing failed.</param>
+    /// <returns>True if the parsing was successful and the keyword was converted to the specified type; otherwise, false.</returns>
+    private static bool TryParseGlobalConstant(string keyword, Type type, out object? value)
+    {
+        value = null;
+
+        if (type == typeof(int) && int.TryParse(keyword, out int intValue)) value = intValue;
+        else if (type == typeof(long) && long.TryParse(keyword, out long longValue)) value = longValue;
+        else if (type == typeof(short) && short.TryParse(keyword, out short shortValue)) value = shortValue;
+        else if (type == typeof(decimal) && decimal.TryParse(keyword, NumberStyles.Float, CultureInfo.InvariantCulture, out decimal decimalValue)) value = decimalValue;
+        else if (type == typeof(double) && double.TryParse(keyword, NumberStyles.Float, CultureInfo.InvariantCulture, out double doubleValue)) value = doubleValue;
+        else if (type == typeof(float) && float.TryParse(keyword, NumberStyles.Float, CultureInfo.InvariantCulture, out float floatValue)) value = floatValue;
+        else if (type == typeof(bool) && bool.TryParse(keyword, out bool boolValue)) value = boolValue;
+        else if (type == typeof(Guid) && Guid.TryParse(keyword, out Guid guidValue)) value = guidValue;
+        else if (type == typeof(DateTime) && DateTime.TryParse(keyword, out DateTime dateValue)) value = dateValue;
+        else if (type.IsEnum && Enum.TryParse(type, keyword, true, out object? enumValue)) value = enumValue;
+
+        return value != null;
+    }
     
 
     /// <summary>
