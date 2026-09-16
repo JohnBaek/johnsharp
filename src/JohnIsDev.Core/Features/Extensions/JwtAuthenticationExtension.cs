@@ -52,7 +52,7 @@ public static class JwtAuthenticationExtension
                     {
                         StringValues accessToken = context.Request.Query["access_token"];
                         PathString path = context.HttpContext.Request.Path;
-                        if (!string.IsNullOrEmpty(accessToken) && (path.StartsWithSegments("/hub/v1")))
+                        if (!string.IsNullOrEmpty(accessToken) && (path.StartsWithSegments("/hub")))
                         {
                             context.Token = accessToken;
                         }
