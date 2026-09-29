@@ -59,9 +59,19 @@ public static class HttpClientExtension
             // Checks on response status
             response.EnsureSuccessStatusCode();
             
-            // Reads a response body 
+            // Reads a response body
             string responseBody = await response.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<TResponse>(responseBody);
+            try
+            {
+                return JsonConvert.DeserializeObject<TResponse>(responseBody);
+            }
+            catch (JsonReaderException)
+            {
+                // WAF 차단 페이지 등 JSON 이 아닌 응답의 원인 확인용
+                Console.Error.WriteLine($"{url} Non-JSON response ({(int)response.StatusCode}), request size: {content.Headers.ContentLength} bytes");
+                Console.Error.WriteLine(responseBody[..Math.Min(responseBody.Length, 500)]);
+                throw;
+            }
         }
         catch (Exception e)
         {
