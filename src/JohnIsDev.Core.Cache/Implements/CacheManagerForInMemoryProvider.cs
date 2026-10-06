@@ -9,7 +9,6 @@ namespace JohnIsDev.Core.Cache.Implements;
 /// InMemory Cache Manager (Should replace integrated server)
 /// </summary>
 public class CacheManagerForInMemoryProvider(
-    ILogger<CacheManagerForInMemoryProvider> logger, 
     IMemoryCache memoryCache 
     ) : ICacheManager
 {

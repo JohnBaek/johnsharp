@@ -78,7 +78,7 @@ public class ResponseList<T> : Response
             Result = Result ,
             Code = Code ,
             Message = Message ,
-            Items = Items.Select(i => i.FromCopyValue<TConvert>()).ToList(),
+            Items = Items.Select(i => i!.FromCopyValue<TConvert>()).ToList(),
         };
     }
 }

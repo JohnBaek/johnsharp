@@ -10,4 +10,8 @@
       <ProjectReference Include="..\JohnIsDev.Core.Models\JohnIsDev.Core.Models.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="McpProvider\Implements\" />
+    </ItemGroup>
+
 </Project>
