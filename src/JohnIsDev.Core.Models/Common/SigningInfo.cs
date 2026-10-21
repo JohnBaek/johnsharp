@@ -32,4 +32,9 @@ public class SigningInfo
     /// Represents a cryptographic signature used to validate the integrity and authenticity of the data.
     /// </summary>
     public string Signature { get; set; }
+    
+    /// <summary>
+    /// Represents the client identifier used for authentication and authorization purposes.
+    /// </summary>
+    public Guid ClientId { get; set; }
 }
