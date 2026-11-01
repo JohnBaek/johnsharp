@@ -245,10 +245,15 @@ public static partial class StringExtensions
     /// <returns></returns>
     public static bool IsValidPhoneNumber(this string input)
     {
-        // Replace hyphens
-        string onlyDigits = input.Replace("-", "");
-        var regex = new Regex(@"^[0-9]+$");
-        return regex.IsMatch(onlyDigits);
+        // 필수값 누락과 공백 입력을 차단한다.
+        if (string.IsNullOrWhiteSpace(input))
+            return false;
+
+        // 010은 11자리, 지역번호 유선 및 070은 각각의 자릿수를 검사한다.
+        return Regex.IsMatch(
+            input.Trim(),
+            @"\A(?:010[0-9]{8}|01[16789][0-9]{7,8}|02[0-9]{7,8}|0(?:3[1-3]|4[1-4]|5[1-5]|6[1-4])[0-9]{7,8}|070[0-9]{8})\z"
+        );
     }
 
     /// <summary>
