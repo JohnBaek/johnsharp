@@ -36,14 +36,14 @@ public class QueryExecutor<TDbContext>(
         {
             TResponse result = await operation(dbContext);
 
-            // Try rollback if the Task was failed
-            if (result.Result == EnumResponseResult.Error)
-            {
-                logger.LogError("Transaction Rollback");
-                await transaction.RollbackAsync();
-                return result;
-            }
-            
+            // // Try rollback if the Task was failed
+            // if (result.Result == EnumResponseResult.Error)
+            // {
+            //     logger.LogError("Transaction Rollback");
+            //     await transaction.RollbackAsync();
+            //     return result;
+            // }
+            //
             if(autoCommit)
                 await transaction.CommitAsync();
             
