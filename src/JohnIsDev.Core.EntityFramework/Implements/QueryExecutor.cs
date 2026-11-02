@@ -39,6 +39,7 @@ public class QueryExecutor<TDbContext>(
             // Try rollback if the Task was failed
             if (result.Result == EnumResponseResult.Error)
             {
+                logger.LogError("Transaction Rollback");
                 await transaction.RollbackAsync();
                 return result;
             }
