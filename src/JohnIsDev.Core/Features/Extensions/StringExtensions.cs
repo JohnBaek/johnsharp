@@ -188,56 +188,41 @@ public static partial class StringExtensions
         => input.IsValidKoreanPhoneNumber() == false;
 
     /// <summary>
-    /// 한국 휴대전화 번호 형식으로 변환한다.
+    /// 한국 전화번호의 국가번호를 국내 접두번호로 변환하고 필요하면 하이픈을 붙인다.
+    /// 해외 번호나 지원하지 않는 형식은 숫자와 국제번호 기호를 유지하여 반환한다.
+    /// 번호의 유효성은 별도로 검사해야 한다.
     /// </summary>
-    /// <param name="input">변환할 휴대전화 번호 문자열</param>
-    /// <param name="isHyphen">하이픈을 포함할지 여부</param>
-    /// <returns>한국 휴대전화 번호 형식으로 변환된 문자열</returns>
+    /// <param name="input">변환할 유선 또는 휴대전화 번호</param>
+    /// <param name="isHyphen">국내 번호에 하이픈을 포함할지 여부</param>
+    /// <returns>국내 형식으로 변환한 번호 또는 정리한 원본 번호</returns>
     public static string ToKoreanPhoneNumber(this string input, bool isHyphen = true)
     {
-        if (input.IsEmpty())
+        if (string.IsNullOrWhiteSpace(input))
             return "";
 
-        string cleanedNumber = Regex.Replace(input, @"[^\d\+]", "");
-        if (cleanedNumber.StartsWith("+82"))
-            cleanedNumber = "0" + cleanedNumber.Substring(3);
+        // 표시용 괄호와 구분자를 제거하되, 해외 번호의 국가번호는 임의로 변경하지 않는다.
+        string cleanedNumber = Regex.Replace(input, @"[^0-9+]", "");
+        string nationalNumber = cleanedNumber;
+        if (cleanedNumber.StartsWith("+82", StringComparison.Ordinal))
+            nationalNumber = "0" + cleanedNumber[3..].TrimStart('0');
+        else if (cleanedNumber.StartsWith("0082", StringComparison.Ordinal))
+            nationalNumber = "0" + cleanedNumber[4..].TrimStart('0');
+        else if (cleanedNumber.StartsWith("82", StringComparison.Ordinal))
+            nationalNumber = "0" + cleanedNumber[2..].TrimStart('0');
 
-        if (isHyphen)
-        {
-            string formattedNumber = cleanedNumber;
-            try
-            {
-                if (cleanedNumber.Length == 11 && cleanedNumber.StartsWith("010"))
-                {
-                    formattedNumber = Regex.Replace(cleanedNumber, @"(\d{3})(\d{4})(\d{4})", "$1-$2-$3");
-                }
-                else if (cleanedNumber.StartsWith("02"))
-                {
-                    if (cleanedNumber.Length == 9)
-                    {
-                        formattedNumber = Regex.Replace(cleanedNumber, @"(\d{2})(\d{3})(\d{4})", "$1-$2-$3");
-                    }
-                    else if (cleanedNumber.Length == 10)
-                    {
-                        formattedNumber = Regex.Replace(cleanedNumber, @"(\d{2})(\d{4})(\d{4})", "$1-$2-$3");
-                    }
-                }
-                else if (cleanedNumber.Length == 10)
-                {
-                    formattedNumber = Regex.Replace(cleanedNumber, @"(\d{3})(\d{3})(\d{4})", "$1-$2-$3");
-                }
-            }
-            catch
-            {
-                return cleanedNumber;
-            }
-            return formattedNumber;
-        }
+        // 국내 번호로 인정되는 경우에만 변환을 적용한다. 잘못된 국가번호를 추측하여 보정하지 않는다.
+        if (!nationalNumber.IsValidPhoneNumber())
+            return cleanedNumber;
 
-        return cleanedNumber;
+        if (!isHyphen)
+            return nationalNumber;
+
+        // 서울 지역번호는 두 자리, 그 외 지원하는 지역번호와 이동전화 접두번호는 세 자리이다.
+        int prefixLength = nationalNumber.StartsWith("02", StringComparison.Ordinal) ? 2 : 3;
+        int middleLength = nationalNumber.Length - prefixLength - 4;
+        return $"{nationalNumber[..prefixLength]}-{nationalNumber.Substring(prefixLength, middleLength)}-{nationalNumber[^4..]}";
     }
-    
-    
+
     /// <summary>
     /// Validate Phone Number
     /// </summary>
