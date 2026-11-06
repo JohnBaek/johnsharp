@@ -11,11 +11,19 @@ namespace JohnIsDev.Core.Features.Utils;
 public class SignUtil
 {
     /// <summary>
+    /// HMAC 서명에 사용할 32바이트 난수 키를 생성한다.
+    /// </summary>
+    /// <returns>Base64로 인코딩한 키를 반환한다.</returns>
+    public static string GenerateKey()
+        => Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
+
+    /// <summary>
     /// Hmac 사이닝 정보를 생성한다.
     /// </summary>
-    /// <param name="clientSecret"></param>
+    /// <param name="clientSecret">시크릿 정보</param>
+    /// <param name="loginId">로그인 아이디</param>
     /// <returns></returns>
-    public SigningInfo GenerateSign(string clientSecret)
+    public SigningInfo GenerateSign(string clientSecret, string loginId)
     {
         // Prepare materials
         long timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
@@ -23,12 +31,13 @@ public class SignUtil
         string message = string.Join(
             "\n" ,
             timestamp.ToString(CultureInfo.InvariantCulture),
-            nonce
+            nonce,
+            loginId
         );
         
         // Generate HMAC signature
         byte[] hmacHashBytes = HMACSHA256.HashData(Encoding.UTF8.GetBytes(clientSecret), Encoding.UTF8.GetBytes(message));
-        return new SigningInfo(timestamp, nonce, Convert.ToBase64String(hmacHashBytes));
+        return new SigningInfo(timestamp, nonce, Convert.ToBase64String(hmacHashBytes), loginId);
     }
 
     /// <summary>
@@ -36,9 +45,10 @@ public class SignUtil
     /// with the one generated using the client secret and signing parameters.
     /// </summary>
     /// <param name="signingInfo">The signing information containing the timestamp, nonce, and signature to validate.</param>
+    /// <param name="loginId"></param>
     /// <param name="clientSecret">The client secret used to generate the expected signature.</param>
     /// <returns>True if the provided signature matches the expected signature; otherwise, false.</returns>
-    public bool ValidateSigning(SigningInfo signingInfo, string clientSecret)
+    public bool ValidateSigning(SigningInfo signingInfo, string loginId, string clientSecret)
     {
         try
         {
@@ -59,7 +69,9 @@ public class SignUtil
             string message = string.Join(
                 "\n",
                 signingInfo.TimeStamp.ToString(CultureInfo.InvariantCulture),
-                signingInfo.Nonce);
+                signingInfo.Nonce,
+                loginId
+                );
             
             // HMAC 서명정보를 생성한다.
             byte[] expectedSignature = HMACSHA256.HashData(Encoding.UTF8.GetBytes(clientSecret), Encoding.UTF8.GetBytes(message));

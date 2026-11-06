@@ -11,11 +11,13 @@ public class SigningInfo
     /// <param name="timeStamp"></param>
     /// <param name="nonce"></param>
     /// <param name="signature"></param>
-    public SigningInfo(long timeStamp, string nonce, string signature)
+    /// <param name="loginId"></param>
+    public SigningInfo(long timeStamp, string nonce, string signature, string loginId)
     {
         TimeStamp = timeStamp;
         Nonce = nonce;
         Signature = signature;
+        LoginId = loginId;
     }
 
     /// <summary>
@@ -37,4 +39,9 @@ public class SigningInfo
     /// Represents the client identifier used for authentication and authorization purposes.
     /// </summary>
     public Guid ClientId { get; set; }
+
+    /// <summary>
+    /// 로그인 아이디
+    /// </summary>
+    public string LoginId { get; set; } = "";
 }
