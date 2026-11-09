@@ -1,12 +1,12 @@
 namespace JohnIsDev.Core.Models.Common;
 
 /// <summary>
-/// Represents information required for signing operations, such as a cryptographic signature.
+/// 서명 정보
 /// </summary>
 public class SigningInfo
 {
     /// <summary>
-    /// Constructor
+    /// 생성자
     /// </summary>
     /// <param name="timeStamp"></param>
     /// <param name="nonce"></param>
@@ -21,27 +21,22 @@ public class SigningInfo
     }
 
     /// <summary>
-    /// Represents the Unix timestamp indicating the specific point in time related to the signing information.
+    /// 서명 시점의 유닉스 타임스탬프
     /// </summary>
     public long TimeStamp { get; set; }
 
     /// <summary>
-    /// A unique, one-time value used to prevent replay attacks or duplicate requests.
+    /// 재전송 공격 및 중복 요청 방지용 일회성 고유값
     /// </summary>
     public string Nonce { get; set; }
 
     /// <summary>
-    /// Represents a cryptographic signature used to validate the integrity and authenticity of the data.
+    /// 데이터 무결성 및 진위 검증용 서명값
     /// </summary>
     public string Signature { get; set; }
-    
-    /// <summary>
-    /// Represents the client identifier used for authentication and authorization purposes.
-    /// </summary>
-    public Guid ClientId { get; set; }
 
     /// <summary>
     /// 로그인 아이디
     /// </summary>
-    public string LoginId { get; set; } = "";
+    public string LoginId { get; set; }
 }
