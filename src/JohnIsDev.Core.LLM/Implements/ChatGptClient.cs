@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using JohnIsDev.Core.LLM.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -76,6 +77,25 @@ public class ChatGptClient : IChatClient
         {
             _logger.LogError(e, e.Message);
             return "";
+        }
+    }
+
+    /// <inheritdoc />
+    public async IAsyncEnumerable<string> AskStreamingAsync(
+        string question,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        var updates = _client.CompleteChatStreamingAsync(
+            new ChatMessage[] { new UserChatMessage(question) },
+            cancellationToken: cancellationToken);
+
+        await foreach (var update in updates.WithCancellation(cancellationToken))
+        {
+            foreach (var part in update.ContentUpdate)
+            {
+                if (!string.IsNullOrEmpty(part.Text))
+                    yield return part.Text;
+            }
         }
     }
 }
