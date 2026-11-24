@@ -61,17 +61,23 @@ public class ChatGptClient : IChatClient
     /// Sends a question to the ChatGpt client and retrieves a response asynchronously.
     /// </summary>
     /// <param name="question">The question to be sent to the ChatGpt client.</param>
+    /// <param name="cancellationToken">모델 요청과 응답 수신을 취소하는 토큰입니다.</param>
     /// <returns>A task representing the asynchronous operation. The task result contains the response from the ChatGpt client, or an empty string if an error occurs or no response is received.</returns>
-    public async Task<string> AskAsync(string question)
+    public async Task<string> AskAsync(string question, CancellationToken cancellationToken = default)
     {
         try
         {
             // Send question to ChatGpt
-            ChatCompletion completion = await _client.CompleteChatAsync(question);
+            ChatCompletion completion = await _client.CompleteChatAsync(
+                new ChatMessage[] { new UserChatMessage(question) }, cancellationToken: cancellationToken);
             if(completion == null || completion.Content.Count == 0)
                 return "";
 
             return completion.Content[0].Text;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception e)
         {

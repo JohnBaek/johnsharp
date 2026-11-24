@@ -70,22 +70,24 @@ public class AzureOpenAiClient : IChatClient, IDisposable
     /// Ask
     /// </summary>
     /// <param name="question"></param>
+    /// <param name="cancellationToken">모델 요청과 응답 수신을 취소하는 토큰입니다.</param>
     /// <returns></returns>
-    public async Task<string> AskAsync(string question)
+    public async Task<string> AskAsync(string question, CancellationToken cancellationToken = default)
     {
         try
         {
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
 
-            StringContent content = new StringContent(JsonConvert.SerializeObject(new
+            using StringContent content = new StringContent(JsonConvert.SerializeObject(new
             {
                 model = _model,
                 input = question,
             }), Encoding.UTF8, "application/json");
             
             // Request to DirectLine API
-            var response = await _httpClient.PostAsync("https://eastus2.api.cognitive.microsoft.com/openai/v1/responses", content);
-            string responseContent = await response.Content.ReadAsStringAsync();
+            using var response = await _httpClient.PostAsync(
+                "https://eastus2.api.cognitive.microsoft.com/openai/v1/responses", content, cancellationToken);
+            string responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
             
             if(! response.IsSuccessStatusCode)
             {
@@ -103,6 +105,10 @@ public class AzureOpenAiClient : IChatClient, IDisposable
                 return output.Answers.First(i => i.Answer != "").Answer;
             
             return "";
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception e)
         {
